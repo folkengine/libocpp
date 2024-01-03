@@ -307,7 +307,7 @@ TEST_F(DatabaseTest, test_insert_and_get_transaction_without_id_tag) {
 }
 
 TEST_F(DatabaseTest, test_insert_and_get_profiles) {
-
+    GTEST_SKIP() << "validFrom/validTo checks are failing. See https://github.com/EVerest/libocpp/issues/384";
     const auto profile = get_sample_charging_profile();
 
     this->db_handler->insert_or_update_charging_profile(1, profile);

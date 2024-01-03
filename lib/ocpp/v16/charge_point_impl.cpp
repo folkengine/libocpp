@@ -20,30 +20,11 @@ const auto INITIAL_CERTIFICATE_REQUESTS_DELAY = std::chrono::seconds(60);
 const auto WEBSOCKET_INIT_DELAY = std::chrono::seconds(2);
 const auto DEFAULT_MESSAGE_QUEUE_SIZE_THRESHOLD = 2E5;
 
-ChargePointImpl::ChargePointImpl(const std::string& config, const fs::path& share_path,
-                                 const fs::path& user_config_path, const fs::path& database_path,
-                                 const fs::path& sql_init_path, const fs::path& message_log_path,
-                                 const std::shared_ptr<EvseSecurity> evse_security,
-                                 const std::optional<SecurityConfiguration> security_configuration) :
-    ocpp::ChargingStationBase(evse_security, security_configuration),
-    boot_notification_callerror(false),
-    initialized(false),
-    connection_state(ChargePointConnectionState::Disconnected),
-    registration_status(RegistrationStatus::Pending),
-    diagnostics_status(DiagnosticsStatus::Idle),
-    firmware_status(FirmwareStatus::Idle),
-    log_status(UploadLogStatusEnumType::Idle),
-    message_log_path(message_log_path.string()), // .string() for compatibility with boost::filesystem
-    switch_security_profile_callback(nullptr) {
-    this->configuration = std::make_shared<ocpp::v16::ChargePointConfiguration>(config, share_path, user_config_path);
+void ChargePointImpl::set_heartbeat() {
     this->heartbeat_timer = std::make_unique<Everest::SteadyTimer>(&this->io_service, [this]() { this->heartbeat(); });
     this->heartbeat_interval = this->configuration->getHeartbeatInterval();
-    this->database_handler =
-        std::make_shared<DatabaseHandler>(this->configuration->getChargePointId(), database_path, sql_init_path);
-    this->database_handler->open_db_connection(this->configuration->getNumberOfConnectors());
-    this->transaction_handler = std::make_unique<TransactionHandler>(this->configuration->getNumberOfConnectors());
-    this->external_notify = {v16::MessageType::StartTransactionResponse};
-    this->message_queue = this->create_message_queue();
+}
+void ChargePointImpl::set_logger() {
     auto log_formats = this->configuration->getLogMessagesFormat();
     bool log_to_console = std::find(log_formats.begin(), log_formats.end(), "console") != log_formats.end();
     bool detailed_log_to_console =
@@ -52,16 +33,24 @@ ChargePointImpl::ChargePointImpl(const std::string& config, const fs::path& shar
     bool log_to_html = std::find(log_formats.begin(), log_formats.end(), "html") != log_formats.end();
     bool session_logging = std::find(log_formats.begin(), log_formats.end(), "session_logging") != log_formats.end();
 
+    // TODO: FIX LONG TERM
     this->logging = std::make_shared<ocpp::MessageLogging>(
         this->configuration->getLogMessages(), this->message_log_path, DateTime().to_rfc3339(), log_to_console,
         detailed_log_to_console, log_to_file, log_to_html, session_logging, nullptr);
+}
 
-    this->boot_notification_timer =
-        std::make_unique<Everest::SteadyTimer>(&this->io_service, [this]() { this->boot_notification(); });
-
+void ChargePointImpl::set_connectors() {
     for (int32_t connector = 0; connector < this->configuration->getNumberOfConnectors() + 1; connector++) {
         this->status_notification_timers.push_back(std::make_unique<Everest::SteadyTimer>(&this->io_service));
+
+        //Had its own loop?
+        this->connectors.insert(std::make_pair(connector, std::make_shared<Connector>(connector)));
     }
+}
+
+void ChargePointImpl::start_timers() {
+    this->boot_notification_timer =
+        std::make_unique<Everest::SteadyTimer>(&this->io_service, [this]() { this->boot_notification(); });
 
     this->clock_aligned_meter_values_timer =
         std::make_unique<ClockAlignedTimer>(&this->io_service, [this]() { this->clock_aligned_meter_values_sample(); });
@@ -93,22 +82,9 @@ ChargePointImpl::ChargePointImpl(const std::string& config, const fs::path& shar
         }
         this->v2g_certificate_timer->interval(V2G_CERTIFICATE_TIMER_INTERVAL);
     });
+}
 
-    this->status =
-        std::make_unique<ChargePointStates>([this](const int32_t connector, const ChargePointErrorCode errorCode,
-                                                   const ChargePointStatus status, const ocpp::DateTime& timestamp) {
-            this->status_notification_timers.at(connector)->stop();
-            this->status_notification_timers.at(connector)->timeout(
-                [this, connector, errorCode, status, timestamp]() {
-                    this->status_notification(connector, errorCode, status, timestamp);
-                },
-                std::chrono::seconds(this->configuration->getMinimumStatusDuration().value_or(0)));
-        });
-
-    for (int id = 0; id <= this->configuration->getNumberOfConnectors(); id++) {
-        this->connectors.insert(std::make_pair(id, std::make_shared<Connector>(id)));
-    }
-
+void ChargePointImpl::set_handlers(){
     this->smart_charging_handler = std::make_unique<SmartChargingHandler>(
         this->connectors, this->database_handler,
         this->configuration->getAllowChargingProfileWithoutStartSchedule().value_or(false));
@@ -140,6 +116,99 @@ ChargePointImpl::ChargePointImpl(const std::string& config, const fs::path& shar
             this->ocsp_request_timer->interval(OCSP_REQUEST_TIMER_INTERVAL);
         });
     }
+}
+
+ChargePointImpl::ChargePointImpl(const std::string& config, const fs::path& share_path,
+                                 const fs::path& user_config_path, const fs::path& database_path,
+                                 const fs::path& sql_init_path, const fs::path& message_log_path,
+                                 const std::shared_ptr<EvseSecurity> evse_security,
+                                 const std::optional<SecurityConfiguration> security_configuration) :
+    ocpp::ChargingStationBase(evse_security, security_configuration),
+    boot_notification_callerror(false),
+    initialized(false),
+    connection_state(ChargePointConnectionState::Disconnected),
+    registration_status(RegistrationStatus::Pending),
+    diagnostics_status(DiagnosticsStatus::Idle),
+    firmware_status(FirmwareStatus::Idle),
+    log_status(UploadLogStatusEnumType::Idle),
+    message_log_path(message_log_path.string()),
+    external_notify({v16::MessageType::StartTransactionResponse}), // .string() for compatibility with boost::filesystem
+    switch_security_profile_callback(nullptr) {
+
+    this->configuration = std::make_shared<ocpp::v16::ChargePointConfiguration>(config, share_path, user_config_path);
+    set_heartbeat();
+    set_logger();
+
+    // Make this injected not built
+    this->database_handler =
+        std::make_shared<DatabaseHandler>(this->configuration->getChargePointId(), database_path, sql_init_path);
+    this->database_handler->open_db_connection(this->configuration->getNumberOfConnectors());
+
+    this->transaction_handler = std::make_unique<TransactionHandler>(this->configuration->getNumberOfConnectors());
+
+    this->message_queue = this->create_message_queue();
+
+    set_connectors();
+
+    start_timers();
+
+    this->status =
+        std::make_unique<ChargePointStates>([this](const int32_t connector, const ChargePointErrorCode errorCode,
+                                                   const ChargePointStatus status, const ocpp::DateTime& timestamp) {
+            this->status_notification_timers.at(connector)->stop();
+            this->status_notification_timers.at(connector)->timeout(
+                [this, connector, errorCode, status, timestamp]() {
+                    this->status_notification(connector, errorCode, status, timestamp);
+                },
+                std::chrono::seconds(this->configuration->getMinimumStatusDuration().value_or(0)));
+        });
+
+    set_handlers();
+}
+
+ChargePointImpl::ChargePointImpl(const std::string& config, const fs::path& share_path,
+                                 const fs::path& user_config_path, const std::shared_ptr<DatabaseHandler> database_handler, const fs::path& message_log_path,
+                                 const std::shared_ptr<EvseSecurity> evse_security,
+                                 const std::optional<SecurityConfiguration> security_configuration) :
+    ocpp::ChargingStationBase(evse_security, security_configuration),
+    boot_notification_callerror(false),
+    initialized(false),
+    connection_state(ChargePointConnectionState::Disconnected),
+    registration_status(RegistrationStatus::Pending),
+    diagnostics_status(DiagnosticsStatus::Idle),
+    firmware_status(FirmwareStatus::Idle),
+    log_status(UploadLogStatusEnumType::Idle),
+    message_log_path(message_log_path.string()),
+    external_notify({v16::MessageType::StartTransactionResponse}), // .string() for compatibility with boost::filesystem
+    switch_security_profile_callback(nullptr) {
+
+    this->configuration = std::make_shared<ocpp::v16::ChargePointConfiguration>(config, share_path, user_config_path);
+    set_heartbeat();
+    set_logger();
+
+    // Make this injected not built
+    this->database_handler = database_handler;
+
+    this->transaction_handler = std::make_unique<TransactionHandler>(this->configuration->getNumberOfConnectors());
+
+    this->message_queue = this->create_message_queue();
+
+    set_connectors();
+
+    start_timers();
+
+    this->status =
+        std::make_unique<ChargePointStates>([this](const int32_t connector, const ChargePointErrorCode errorCode,
+                                                   const ChargePointStatus status, const ocpp::DateTime& timestamp) {
+            this->status_notification_timers.at(connector)->stop();
+            this->status_notification_timers.at(connector)->timeout(
+                [this, connector, errorCode, status, timestamp]() {
+                    this->status_notification(connector, errorCode, status, timestamp);
+                },
+                std::chrono::seconds(this->configuration->getMinimumStatusDuration().value_or(0)));
+        });
+
+    set_handlers();
 }
 
 std::unique_ptr<ocpp::MessageQueue<v16::MessageType>> ChargePointImpl::create_message_queue() {

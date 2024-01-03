@@ -182,6 +182,12 @@ private:
                        const ocpp::v201::CertificateActionEnum& certificate_action)>
         get_15118_ev_certificate_response_callback;
 
+    void set_heartbeat();
+    void set_logger();
+    void set_connectors();
+    void start_timers();
+    void set_handlers();
+
     /// \brief This function is called after a successful connection to the Websocket
     void connected_callback();
     void init_websocket();
@@ -355,9 +361,32 @@ public:
     /// also available) configuration keys in the "Internal" section of the config file. Please note that this is
     /// intended for debugging purposes only as it logs all communication, including authentication messages.
     /// \param evse_security Pointer to evse_security that manages security related operations
+
     explicit ChargePointImpl(const std::string& config, const fs::path& share_path, const fs::path& user_config_path,
                              const fs::path& database_path, const fs::path& sql_init_path,
                              const fs::path& message_log_path, const std::shared_ptr<EvseSecurity> evse_security,
+                             const std::optional<SecurityConfiguration> security_configuration);
+
+    /// \brief The main entrypoint for libOCPP for OCPP 1.6
+    /// \param config a nlohmann json config object that contains the libocpp 1.6 config. There are example configs that
+    /// work with a SteVe installation running in Docker, for example: config/v16/config-docker.json
+    /// \param share_path This path contains the following files and directories and is installed by the libocpp install
+    /// target
+    /// \param user_config_path this points to a "user config", which we call a configuration file that's merged with
+    /// the config that's provided in the "config" parameter. Here you can add, remove and overwrite settings without
+    /// modifying the config passed in the first parameter directly. This is also used by libocpp to persistently modify
+    /// config entries that are changed by the CSMS that should persist across restarts
+    /// \param database_handler this is an injected databasehandle... TODO MAKE THIS BETTER
+    /// \param message_log_path this points to the directory in which libocpp can put OCPP communication logfiles for
+    /// debugging purposes. This behavior can be controlled by the "LogMessages" (set to true by default) and
+    /// "LogMessagesFormat" (set to ["log", "html", "session_logging"] by default, "console" and "console_detailed" are
+    /// also available) configuration keys in the "Internal" section of the config file. Please note that this is
+    /// intended for debugging purposes only as it logs all communication, including authentication messages.
+    /// \param evse_security Pointer to evse_security that manages security related operations
+
+    explicit ChargePointImpl(const std::string& config, const fs::path& share_path, const fs::path& user_config_path,
+                             const std::shared_ptr<DatabaseHandler> database_handler, const fs::path& message_log_path,
+                             const std::shared_ptr<EvseSecurity> evse_security,
                              const std::optional<SecurityConfiguration> security_configuration);
 
     ~ChargePointImpl() {
