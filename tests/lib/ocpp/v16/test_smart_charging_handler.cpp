@@ -45,8 +45,29 @@ protected:
     std::shared_ptr<DatabaseHandler> database_handler;
 };
 
-TEST_F(ChargepointTestFixture, validateNoRealProfilesTest) {
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NegativeConnectorIdTest__ReturnsFalse) {
+    auto handler =
+        new SmartChargingHandler(connectors, database_handler, false);
 
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+
+    bool sut = handler->validate_profile(profile, -1, true, 1, 1, 1, {});
+
+    ASSERT_FALSE(sut);
+}
+
+TEST_F(ChargepointTestFixture, ValidateProfile__NoProfile__ReturnsFalse__CocoVersion) {
+    auto handler =
+        new SmartChargingHandler(connectors, database_handler, false);
+
+    auto profile = createChargingProfile(createChargeSchedule());
+
+    bool sut = handler->validate_profile(profile, 1, true, 1, 1, 1, {});
+    
+    ASSERT_FALSE(sut);
+}
+
+TEST_F(ChargepointTestFixture, ValidateProfile__NoProfile__ReturnsFalse) {
     auto chargingSchedule = createChargeSchedule();
 
     auto profile = createChargingProfile(chargingSchedule);
@@ -66,7 +87,7 @@ TEST_F(ChargepointTestFixture, validateNoRealProfilesTest) {
     ASSERT_FALSE(sut);
 }
 
-TEST_F(ChargepointTestFixture, validateProfileTest) {
+TEST_F(ChargepointTestFixture, ValidateProfile) {
     auto c1 = std::make_shared<Connector>(Connector{1});
     connectors[1] = c1;
 
