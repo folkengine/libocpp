@@ -361,5 +361,26 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_ChargingProfileKind
     ASSERT_FALSE(sut);
 }
 
+/**
+ * NB09 profile.chargingProfileKind == Recurring && !profile.chargingSchedule.startSchedule
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_ChargingProfileKindRecurringNoStartSchedule__ReturnsFalse) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    // Create a SmartChargingHandler where allow_charging_profile_without_start_schedule is set to false
+    auto c1 = std::make_shared<Connector>(Connector{1});
+    connectors[1] = c1;
+    auto allow_charging_profile_without_start_schedule = false;
+    auto handler = new SmartChargingHandler(connectors, database_handler, allow_charging_profile_without_start_schedule);
+
+    profile.chargingProfileKind = ChargingProfileKindType::Recurring;
+    profile.chargingSchedule.startSchedule = std::nullopt;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+    
+    ASSERT_FALSE(sut);
+}
+
 } // namespace v16
 } // namespace ocpp

@@ -285,6 +285,7 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
  * - NB06 Number of installed Profiles is > max_charging_profiles_installed
  * - NB07 Invalid ChargingSchedule
  * - NB08 profile.chargingProfileKind == Recurring && !profile.recurrencyKind
+ * - NB09 profile.chargingProfileKind == Recurring && !profile.chargingSchedule.startSchedule
  */
 bool SmartChargingHandler::validate_profile(
     ChargingProfile& profile, const int connector_id, bool ignore_no_transaction, const int profile_max_stack_level,
@@ -322,7 +323,7 @@ bool SmartChargingHandler::validate_profile(
             return false;
         }
         if (!profile.chargingSchedule.startSchedule) {
-            EVLOG_warning << "INVALID PROFILE - Recurring Profile Kind with no startSchedule";
+            EVLOG_warning << "INVALID PROFILE - BOOOOP Recurring Profile Kind with no startSchedule";
             if (this->allow_charging_profile_without_start_schedule) {
                 EVLOG_warning << "Allowing profile because AllowChargingProfileWithoutStartSchedule is configured";
                 profile.chargingSchedule.startSchedule = ocpp::DateTime();
