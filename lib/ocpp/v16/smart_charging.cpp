@@ -274,6 +274,7 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
  * 
  * Positive Boundary Conditions:
  * - PB01 Valid Profile
+ * - PB02 Valid Profile No startSchedule & handler allows no startSchedule
  * 
  * Negative Boundary Conditions:
  * - NB01 Valid Profile, ConnectorID gt this->connectors.size()
@@ -281,6 +282,9 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
  * - NB03 profile.stackLevel lt 0
  * - NB04 profile.stackLevel gt profile_max_stack_level
  * - NB05 profile.chargingProfileKind == Absolute && !profile.chargingSchedule.startSchedule
+ * - NB06 Number of installed Profiles is > max_charging_profiles_installed
+ * - NB07 Invalid ChargingSchedule
+ * - NB08 profile.chargingProfileKind == Recurring && !profile.recurrencyKind
  */
 bool SmartChargingHandler::validate_profile(
     ChargingProfile& profile, const int connector_id, bool ignore_no_transaction, const int profile_max_stack_level,
