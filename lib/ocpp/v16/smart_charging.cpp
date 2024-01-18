@@ -268,6 +268,18 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
     return composite_schedule;
 }
 
+/**
+ * Test Matrix:
+ * 
+ * Positive Boundary Conditions:
+ * - PB01 Valid Profile
+ * 
+ * Negative Boundary Conditions:
+ * - NB01 Valid Profile, ConnectorID gt this->connectors.size()
+ * - NB02 Valid Profile, ConnectorID lt 0
+ * - NB03 profile.stackLevel lt 0
+ * 
+ */
 bool SmartChargingHandler::validate_profile(
     ChargingProfile& profile, const int connector_id, bool ignore_no_transaction, const int profile_max_stack_level,
     const int max_charging_profiles_installed, const int charging_schedule_max_periods,
