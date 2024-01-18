@@ -18,6 +18,7 @@ bool validate_schedule(const ChargingSchedule& schedule, const int charging_sche
         return false;
     }
 
+    // TODO 
     if (std::find(charging_schedule_allowed_charging_rate_units.begin(),
                   charging_schedule_allowed_charging_rate_units.end(),
                   schedule.chargingRateUnit) == charging_schedule_allowed_charging_rate_units.end()) {
@@ -278,7 +279,8 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
  * - NB01 Valid Profile, ConnectorID gt this->connectors.size()
  * - NB02 Valid Profile, ConnectorID lt 0
  * - NB03 profile.stackLevel lt 0
- * 
+ * - NB04 profile.stackLevel gt profile_max_stack_level
+ * - NB05 profile.chargingProfileKind == Absolute && !profile.chargingSchedule.startSchedule
  */
 bool SmartChargingHandler::validate_profile(
     ChargingProfile& profile, const int connector_id, bool ignore_no_transaction, const int profile_max_stack_level,

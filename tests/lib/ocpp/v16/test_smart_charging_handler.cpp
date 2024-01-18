@@ -58,7 +58,7 @@ protected:
      */
     ChargingProfile createChargingProfile_Example1() {
         auto chargingRateUnit = ChargingRateUnit::W;
-        auto chargingSchedulePeriod = std::vector<ChargingSchedulePeriod>{ChargingSchedulePeriod{0, 2000, 0}};
+        auto chargingSchedulePeriod = std::vector<ChargingSchedulePeriod>{ChargingSchedulePeriod{0, 2000, 1}};
         auto duration = 1080;
         auto startSchedule = ocpp::DateTime("2024-01-17T17:00:00");
         float minChargingRate = 0;
@@ -93,9 +93,9 @@ protected:
      */
     ChargingProfile createChargingProfile_Example2() {
         auto chargingRateUnit = ChargingRateUnit::W;
-        auto chargingSchedulePeriod = std::vector<ChargingSchedulePeriod>{ChargingSchedulePeriod{0, 999999, 0}};
+        auto chargingSchedulePeriod = std::vector<ChargingSchedulePeriod>{ChargingSchedulePeriod{0, 999999, 1}};
         auto duration = 0;
-        auto startSchedule = ocpp::DateTime("2020-01-05T00:00:00");
+        auto startSchedule = ocpp::DateTime("2020-01-19T00:00:00");
         float minChargingRate = 0;
         auto chargingSchedule = ChargingSchedule{
             chargingRateUnit,
@@ -168,7 +168,7 @@ TEST_F(ChargepointTestFixture, ValidateProfile) {
 TEST_F(ChargepointTestFixture, ValidateProfile__example1) {
     // GTEST_SKIP();
     auto profile = createChargingProfile_Example1();
-    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::W};
     auto handler = createSmartChargingHandler();
 
     // const int connector_id = -1;
@@ -251,6 +251,43 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_ConnectorIdZero__Re
                                          max_charging_profiles_installed, charging_schedule_max_periods,
                                          charging_schedule_allowed_charging_rate_units);
 
+    ASSERT_FALSE(sut);
+}
+
+/**
+ * NB04 profile.stackLevel gt this->profile_max_stack_level
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_StackLevelGreaterThanMaxStackLevel__ReturnsFalse) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+
+    profile.stackLevel = profile_max_stack_level + 1;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods,
+                                         charging_schedule_allowed_charging_rate_units);
+
+    ASSERT_FALSE(sut);
+}
+
+/**
+ * NB05 profile.chargingProfileKind == Absolute && !profile.chargingSchedule.startSchedule 
+*/
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_ChargingProfileKindAbsoluteNoStartSchedule__ReturnsFalse) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    // Create a SmartChargingHandler where allow_charging_profile_without_start_schedule is set to false
+    auto c1 = std::make_shared<Connector>(Connector{1});
+    connectors[1] = c1;
+    auto allow_charging_profile_without_start_schedule = false;
+    auto handler = new SmartChargingHandler(connectors, database_handler, allow_charging_profile_without_start_schedule);
+
+    profile.chargingProfileKind = ChargingProfileKindType::Absolute;
+    profile.chargingSchedule.startSchedule = std::nullopt;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods,
+                                         charging_schedule_allowed_charging_rate_units);
+    
     ASSERT_FALSE(sut);
 }
 
