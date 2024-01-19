@@ -274,7 +274,10 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
  * 
  * Positive Boundary Conditions:
  * - PB01 Valid Profile
- * - PB02 Valid Profile No startSchedule & handler allows no startSchedule
+ * - PB02 Valid Profile No startSchedule & handler allows no startSchedule & profile.chargingProfileKind == Absolute
+ * - PB03 Valid Profile No startSchedule & handler allows no startSchedule & profile.chargingProfileKind == Relative
+ * - PB04 Absolute ChargePointMaxProfile Profile with connector id 0
+ * - PB05 Absolute TxDefaultProfile 
  * 
  * Negative Boundary Conditions:
  * - NB01 Valid Profile, ConnectorID gt this->connectors.size()
@@ -285,7 +288,10 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
  * - NB06 Number of installed Profiles is > max_charging_profiles_installed
  * - NB07 Invalid ChargingSchedule
  * - NB08 profile.chargingProfileKind == Recurring && !profile.recurrencyKind
- * - NB09 profile.chargingProfileKind == Recurring && !profile.chargingSchedule.startSchedule
+ * - NB09 profile.chargingProfileKind == Recurring && !startSchedule
+ * - NB10 profile.chargingProfileKind == Recurring && !startSchedule && !allow_charging_profile_without_start_schedule
+ * - NB11 Absolute ChargePointMaxProfile Profile with connector id not 0
+ * - NB12 Absolute TxProfile connector_id == 0 
  */
 bool SmartChargingHandler::validate_profile(
     ChargingProfile& profile, const int connector_id, bool ignore_no_transaction, const int profile_max_stack_level,
@@ -323,7 +329,7 @@ bool SmartChargingHandler::validate_profile(
             return false;
         }
         if (!profile.chargingSchedule.startSchedule) {
-            EVLOG_warning << "INVALID PROFILE - BOOOOP Recurring Profile Kind with no startSchedule";
+            EVLOG_warning << "INVALID PROFILE - Recurring Profile Kind with no startSchedule";
             if (this->allow_charging_profile_without_start_schedule) {
                 EVLOG_warning << "Allowing profile because AllowChargingProfileWithoutStartSchedule is configured";
                 profile.chargingSchedule.startSchedule = ocpp::DateTime();
@@ -331,7 +337,7 @@ bool SmartChargingHandler::validate_profile(
                 return false;
             }
         }
-        if (profile.chargingSchedule.duration) {
+        if (profile.chargingSchedule.duration) { 
             int max_recurrency_duration;
             if (profile.recurrencyKind == RecurrencyKindType::Daily) {
                 max_recurrency_duration = SECONDS_PER_DAY;
@@ -360,12 +366,15 @@ bool SmartChargingHandler::validate_profile(
         return true;
     } else if (profile.chargingProfilePurpose == ChargingProfilePurposeType::TxProfile) {
         if (connector_id != 0) {
+            EVLOG_info << "BOOP--" << 0;
             if (ignore_no_transaction or
                 (this->connectors.at(connector_id)->transaction != nullptr and
                  this->connectors.at(connector_id)->transaction->get_transaction_id() == profile.transactionId)) {
+                EVLOG_info << "FLOOP";
                 return true;
             } else {
-                EVLOG_info << "INVALID PROFILE - transaction_id doesnt match for purpose TxProfile";
+                EVLOG_info << "GLOOP";
+                EVLOG_info << "INVALID PROFILE - transaction_id doesnt match for purpose TxProfile ---- ";
                 return false;
             }
         } else {

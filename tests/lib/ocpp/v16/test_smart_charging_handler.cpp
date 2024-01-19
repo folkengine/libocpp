@@ -166,7 +166,6 @@ TEST_F(ChargepointTestFixture, ValidateProfile) {
  * This example is taken from the OCPP 2.0.1 Spec page. 241
  */
 TEST_F(ChargepointTestFixture, ValidateProfile__example1) {
-    // GTEST_SKIP();
     auto profile = createChargingProfile_Example1();
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::W};
     auto handler = createSmartChargingHandler();
@@ -379,6 +378,136 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_ChargingProfileKind
                                          max_charging_profiles_installed, charging_schedule_max_periods, 
                                          charging_schedule_allowed_charging_rate_units);
     
+    ASSERT_FALSE(sut);
+}
+
+/**
+ * PB03 Valid Profile No startSchedule & handler allows no startSchedule & profile.chargingProfileKind == Relative
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NoStartScheduleAllowedRelative__ReturnsTrue) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+
+    profile.chargingProfileKind = ChargingProfileKindType::Recurring;
+    profile.chargingSchedule.startSchedule = std::nullopt;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+    
+    ASSERT_TRUE(sut);
+}
+
+/**
+ * NB10 profile.chargingProfileKind == Recurring && !startSchedule && !allow_charging_profile_without_start_schedule
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__RecurringNoStartScheduleNotAllowed__ReturnsFalse) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto c1 = std::make_shared<Connector>(Connector{1});
+    connectors[1] = c1;
+    auto allow_charging_profile_without_start_schedule = false;
+    auto handler = new SmartChargingHandler(connectors, database_handler, allow_charging_profile_without_start_schedule);
+
+    profile.chargingProfileKind = ChargingProfileKindType::Recurring;
+    profile.chargingSchedule.startSchedule = std::nullopt;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+    
+    ASSERT_FALSE(sut);
+}
+
+/**
+ * PB04 Absolute ChargePointMaxProfile Profile with connector id 0
+ * 
+ * Absolute ChargePointMaxProfile Profile need a connector id of 0
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NotRecurrencyKindConnectorId0__ReturnsFalse) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+
+    profile.chargingProfilePurpose = ChargingProfilePurposeType::ChargePointMaxProfile;
+    profile.chargingProfileKind = ChargingProfileKindType::Absolute;
+    const int connector_id = 0;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+    
+    ASSERT_TRUE(sut);
+}
+
+/**
+ * NB11 Absolute ChargePointMaxProfile Profile with connector id not 0
+ * 
+ * ChargePointMaxProfile Profiles where chargingProfileKind == Absolute need a connector id of 0 and not had a 
+ * ChargingProfileKindType of Relative
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NotRecurrencyKindConnectorIdNot0__ReturnsFalse) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+
+    profile.chargingProfilePurpose = ChargingProfilePurposeType::ChargePointMaxProfile;
+    profile.chargingProfileKind = ChargingProfileKindType::Absolute;
+    const int connector_id = 1;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+    
+    ASSERT_FALSE(sut);
+}
+
+/**
+ * PB05 Absolute TxDefaultProfile  
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfileTxDefaultProfile__ReturnsTrue) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+
+    profile.chargingProfilePurpose = ChargingProfilePurposeType::TxDefaultProfile;
+    profile.chargingProfileKind = ChargingProfileKindType::Absolute;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+    
+    ASSERT_TRUE(sut);
+}
+
+/**
+ * PB05 Absolute TxProfile ignore_no_transaction == true
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__AbsoluteTxProfileIgnoreNoTransaction__ReturnsTrue) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+
+    profile.chargingProfilePurpose = ChargingProfilePurposeType::TxProfile;
+    profile.chargingProfileKind = ChargingProfileKindType::Absolute;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+    
+    ASSERT_TRUE(sut);
+}
+
+/**
+ * NB12 Absolute TxProfile connector_id == 0 
+ */
+TEST_F(ChargepointTestFixture, ValidateProfile__AbsoluteTxProfileConnectorId0__ReturnsFalse) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+    
+    profile.chargingProfileKind = ChargingProfileKindType::Absolute;
+    profile.chargingProfilePurpose = ChargingProfilePurposeType::TxProfile;
+    const int connector_id = 0;
+    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods, 
+                                         charging_schedule_allowed_charging_rate_units);
+
     ASSERT_FALSE(sut);
 }
 
