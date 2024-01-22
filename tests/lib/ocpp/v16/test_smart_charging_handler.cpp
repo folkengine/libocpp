@@ -55,6 +55,8 @@ protected:
 
     /**
      * TxDefaultProfile, stack #1: time-of-day limitation to 2 kW, recurring every day from 17:00h to 20:00h.
+     * 
+     * This profile is Example #1 taken from the OCPP 2.0.1 Spec Part 2, page 241.
      */
     ChargingProfile createChargingProfile_Example1() {
         auto chargingRateUnit = ChargingRateUnit::W;
@@ -90,6 +92,8 @@ protected:
 
     /**
      * TxDefaultProfile, stack #2: overruling Sundays to no limit, recurring every week starting 2020-01-05.
+     * 
+     * This profile is Example #2 taken from the OCPP 2.0.1 Spec Part 2, page 241.
      */
     ChargingProfile createChargingProfile_Example2() {
         auto chargingRateUnit = ChargingRateUnit::W;
@@ -130,6 +134,7 @@ protected:
         return handler;
     }
 
+    // Default values used within the tests
     std::map<int32_t, std::shared_ptr<Connector>> connectors;
     std::shared_ptr<DatabaseHandler> database_handler;
 
@@ -148,11 +153,6 @@ TEST_F(ChargepointTestFixture, ValidateProfile) {
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
     auto handler = createSmartChargingHandler();
 
-    // const int connector_id = -1;
-    // bool ignore_no_transaction = true;
-    // const int profile_max_stack_level = 1;
-    // const int max_charging_profiles_installed = 1;
-    // const int charging_schedule_max_periods = 1;
     bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
                                          max_charging_profiles_installed, charging_schedule_max_periods,
                                          charging_schedule_allowed_charging_rate_units);
@@ -170,34 +170,6 @@ TEST_F(ChargepointTestFixture, ValidateProfile__example1) {
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::W};
     auto handler = createSmartChargingHandler();
 
-    // const int connector_id = -1;
-    // bool ignore_no_transaction = true;
-    // const int profile_max_stack_level = 1;
-    // const int max_charging_profiles_installed = 1;
-    // const int charging_schedule_max_periods = 1;
-    bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
-                                         max_charging_profiles_installed, charging_schedule_max_periods,
-                                         charging_schedule_allowed_charging_rate_units);
-
-    ASSERT_TRUE(sut);
-}
-
-/**
- * PB01 Valid Profile: Example 2
- * 
- * This example is taken from the OCPP 2.0.1 Spec page. 241
- */
-TEST_F(ChargepointTestFixture, ValidateProfile__example2) {
-    GTEST_SKIP();
-    auto profile = createChargingProfile_Example2();
-    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
-    auto handler = createSmartChargingHandler();
-
-    // const int connector_id = -1;
-    // bool ignore_no_transaction = true;
-    // const int profile_max_stack_level = 1;
-    // const int max_charging_profiles_installed = 1;
-    // const int charging_schedule_max_periods = 1;
     bool sut = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
                                          max_charging_profiles_installed, charging_schedule_max_periods,
                                          charging_schedule_allowed_charging_rate_units);
