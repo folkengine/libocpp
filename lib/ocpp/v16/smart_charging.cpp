@@ -278,6 +278,7 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
  * - PB03 Valid Profile No startSchedule & handler allows no startSchedule & profile.chargingProfileKind == Relative
  * - PB04 Absolute ChargePointMaxProfile Profile with connector id 0
  * - PB05 Absolute TxDefaultProfile 
+ * - PB06 Absolute TxProfile && connector transaction != nullptr && transaction_id matches SKIPPED: was not able to test
  * 
  * Negative Boundary Conditions:
  * - NB01 Valid Profile, ConnectorID gt this->connectors.size()
@@ -366,14 +367,12 @@ bool SmartChargingHandler::validate_profile(
         return true;
     } else if (profile.chargingProfilePurpose == ChargingProfilePurposeType::TxProfile) {
         if (connector_id != 0) {
-            EVLOG_info << "BOOP--" << 0;
             if (ignore_no_transaction or
                 (this->connectors.at(connector_id)->transaction != nullptr and
                  this->connectors.at(connector_id)->transaction->get_transaction_id() == profile.transactionId)) {
-                EVLOG_info << "FLOOP";
+                // TODO: Need to figure a way to reach this block from a unit test
                 return true;
             } else {
-                EVLOG_info << "GLOOP";
                 EVLOG_info << "INVALID PROFILE - transaction_id doesnt match for purpose TxProfile ---- ";
                 return false;
             }
