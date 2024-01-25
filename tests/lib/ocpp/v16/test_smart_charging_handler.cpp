@@ -561,5 +561,9 @@ TEST_F(ChargepointTestFixture, ClearAllProfilesWithFilter__NoMatchingProfileId_C
     ASSERT_FALSE(sut);
 }
 
+/**
+ * SmartChargingHandler::add_charge_point_max_profile tests
+ */
+
 } // namespace v16
 } // namespace ocpp
