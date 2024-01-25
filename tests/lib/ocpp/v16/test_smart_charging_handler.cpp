@@ -564,6 +564,26 @@ TEST_F(ChargepointTestFixture, ClearAllProfilesWithFilter__NoMatchingProfileId_C
 /**
  * SmartChargingHandler::add_charge_point_max_profile tests
  */
+ TEST_F(ChargepointTestFixture, AddChargePointMaxProfile) {
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    auto handler = createSmartChargingHandler();
+    profile.chargingProfilePurpose = ChargingProfilePurposeType::ChargePointMaxProfile;
+    profile.chargingProfileKind = ChargingProfileKindType::Absolute;
+    const int connector_id = 0;
+    bool is_profile_valid = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
+                                         max_charging_profiles_installed, charging_schedule_max_periods,
+                                         charging_schedule_allowed_charging_rate_units);
+    ASSERT_TRUE(is_profile_valid);
+
+    handler->add_charge_point_max_profile(profile);
+    auto valid_profiles = handler->get_valid_profiles({}, {}, 0);
+    auto retrieved = valid_profiles[0];
+
+    ASSERT_EQ(1, valid_profiles.size());
+    ASSERT_EQ(ChargingProfilePurposeType::ChargePointMaxProfile, retrieved.chargingProfilePurpose);
+    ASSERT_EQ(ChargingProfileKindType::Absolute, retrieved.chargingProfileKind);
+}
 
 } // namespace v16
 } // namespace ocpp
