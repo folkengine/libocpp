@@ -70,9 +70,12 @@ protected:
     }
 
     ChargingProfile createChargingProfile(ChargingSchedule chargingSchedule) {
+        return createChargingProfile(chargingSchedule, ChargingProfilePurposeType::TxDefaultProfile);
+    }
+
+    ChargingProfile createChargingProfile(ChargingSchedule chargingSchedule, ChargingProfilePurposeType chargingProfilePurpose) {
         auto chargingProfileId = 1;
         auto stackLevel = 1;
-        auto chargingProfilePurpose = ChargingProfilePurposeType::TxDefaultProfile;
         auto chargingProfileKind = ChargingProfileKindType::Absolute;
         auto recurrencyKind = RecurrencyKindType::Daily;
         return ChargingProfile{
@@ -647,7 +650,6 @@ TEST_F(ChargepointTestFixture, AddChargePointMaxProfile) {
 }
 
 TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0) {
-    // GTEST_SKIP();
     std::cout << ">>> AddTxDefaultProfile_ConnectorId_gt_0\n";
     auto handler = createSmartChargingHandler(1);
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
@@ -671,7 +673,6 @@ TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0) {
  }
 
  TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0_Retrieved_at_0__NoProfilesReturned) {
-    // GTEST_SKIP();
     std::cout << ">>> AddTxDefaultProfile_ConnectorId_eq_0_Retrieved_at_0__ThrowsException\n";
     auto handler = createSmartChargingHandler(1);
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
@@ -694,7 +695,6 @@ TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0) {
  * SmartChargingHandler::add_tx_default_profile test
  */
 TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorId_gt_0) {
-    // GTEST_SKIP();
     auto handler = createSmartChargingHandlerWithChargePointMaxProfile();
     auto valid_profiles = handler->get_valid_profiles({}, {}, 0);
     ASSERT_EQ(1, valid_profiles.size());
@@ -719,7 +719,6 @@ TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorId_gt_0) {
  * greater than the number of connectors in the SmartChargingHandler's connectors map.
  */ 
 TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorIdOverMax__ThrowsException) {
-    // GTEST_SKIP();
     auto handler = createSmartChargingHandler();
 
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
@@ -735,7 +734,31 @@ TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorIdOverMax__ThrowsEx
     }
 
     ASSERT_FALSE(false);
- }
+}
+
+/**
+ * SmartChargingHandler::add_tx_profile
+ */
+TEST_F(ChargepointTestFixture, AddTxProfile) {
+    auto handler = createSmartChargingHandlerWithChargePointMaxProfile();
+    auto valid_profiles = handler->get_valid_profiles({}, {}, 0);
+    ASSERT_EQ(1, valid_profiles.size());
+    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A), ChargingProfilePurposeType::TxProfile);
+    const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
+    
+    const int connector_id = 2;
+    handler->add_tx_profile(profile, connector_id);
+
+    valid_profiles = handler->get_valid_profiles({}, {}, connector_id);
+    ASSERT_EQ(2, valid_profiles.size());
+    auto chargepoint_max_profile = valid_profiles[0];
+    ASSERT_EQ(ChargingProfilePurposeType::ChargePointMaxProfile, chargepoint_max_profile.chargingProfilePurpose);
+    ASSERT_EQ(ChargingProfileKindType::Absolute, chargepoint_max_profile.chargingProfileKind);
+    auto tx_default_profile = valid_profiles[1];
+    ASSERT_EQ(ChargingProfilePurposeType::TxProfile, tx_default_profile.chargingProfilePurpose);
+    ASSERT_EQ(ChargingProfileKindType::Absolute, tx_default_profile.chargingProfileKind);
+}
+
 
 } // namespace v16
 } // namespace ocpp
