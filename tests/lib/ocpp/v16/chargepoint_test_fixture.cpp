@@ -180,11 +180,6 @@ protected:
 
         profile.chargingProfilePurpose = ChargingProfilePurposeType::ChargePointMaxProfile;
         profile.chargingProfileKind = ChargingProfileKindType::Absolute;
-        const int connector_id = 0;
-        const int max_charging_profiles_installed = 10;
-        bool is_profile_valid = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
-                                            max_charging_profiles_installed, charging_schedule_max_periods,
-                                            charging_schedule_allowed_charging_rate_units);
         handler->add_charge_point_max_profile(profile);
 
         return handler;
