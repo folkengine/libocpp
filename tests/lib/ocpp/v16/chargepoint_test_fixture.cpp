@@ -40,7 +40,7 @@ namespace v16 {
  * - NB12 Absolute TxProfile connector_id == 0
  */
 class ChargepointTestFixture : public testing::Test {
-protected:
+public:
     void SetUp() override {
     }
 
