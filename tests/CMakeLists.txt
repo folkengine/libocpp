@@ -1,7 +1,18 @@
+FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+        URL_HASH SHA256=1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4
+)
+
+# Fetch GoogleTest amd make build scripts available
+FetchContent_MakeAvailable(googletest)
+
+include(GoogleTest)
+
 add_definitions(-D_SQL_INIT_FILE="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/everest/modules/OCPP/init.sql")
 add_executable(database_tests database_tests.cpp)
 
-target_include_directories(database_tests PUBLIC ${GTEST_INCLUDE_DIRS})
+target_include_directories(database_tests PUBLIC)
 
 find_package(GTest REQUIRED)
 
@@ -10,8 +21,6 @@ target_link_libraries(database_tests PRIVATE
     date::date
     nlohmann_json::nlohmann_json
     nlohmann_json_schema_validator
-    ${GTEST_LIBRARIES} 
-    ${GTEST_MAIN_LIBRARIES} 
     pthread
     )
 
@@ -28,12 +37,10 @@ add_custom_command(TARGET libocpp_unit_tests POST_BUILD
 
 add_test(libocpp_unit_tests libocpp_unit_tests)
 
-target_include_directories(libocpp_unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${GTEST_INCLUDE_DIRS})
+target_include_directories(libocpp_unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(libocpp_unit_tests PRIVATE
         ocpp
         GTest::gmock_main
-        ${GTEST_LIBRARIES}
-        ${GTEST_MAIN_LIBRARIES}
 )
 target_sources(libocpp_unit_tests PRIVATE
         comparators.cpp)
@@ -45,12 +52,10 @@ add_subdirectory(lib/ocpp/common)
 
 add_executable(utils_tests utils_tests.cpp)
 
-target_include_directories(utils_tests PUBLIC ${GTEST_INCLUDE_DIRS})
+target_include_directories(utils_tests PUBLIC)
 
 target_link_libraries(utils_tests PRIVATE
         ocpp
-        ${GTEST_LIBRARIES}
-        ${GTEST_MAIN_LIBRARIES}
 )
 
 add_test(utils_tests utils_tests)
