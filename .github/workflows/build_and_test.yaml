@@ -3,7 +3,8 @@
 
 name: Build and test libocpp
 on: 
-  pull_request: {}
+  push:
+  pull_request:
   workflow_dispatch:
     inputs:
       runner:
