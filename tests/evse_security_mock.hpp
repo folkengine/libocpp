@@ -4,7 +4,7 @@
 #ifndef OCPP_EVSE_SECURITY_MOCK_H
 #define OCPP_EVSE_SECURITY_MOCK_H
 
-// #include <gmock/gmock.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <ocpp/common/evse_security.hpp>
