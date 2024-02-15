@@ -21,8 +21,7 @@ target_link_libraries(database_tests PRIVATE
     nlohmann_json_schema_validator
     gtest_main
     pthread
-    )
-
+)
 
 add_test(database_tests database_tests)
 
