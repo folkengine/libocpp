@@ -3,9 +3,12 @@ include(FetchContent)
 FetchContent_Declare(
         gtest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG release-1.12.1       
+        GIT_TAG release-1.12.1   
 )
 FetchContent_MakeAvailable(gtest)
+
+# GIT_TAG release-1.12.1   
+# GIT_TAG v1.14.0 
 
 #########################################################
 # Run Database Tests
@@ -26,7 +29,22 @@ target_link_libraries(database_tests PRIVATE
 add_test(database_tests database_tests)
 
 #########################################################
-# Run OCPP Tests
+# Run OCPP Common Tests
+
+add_executable(libocpp_common_unit_tests
+        lib/ocpp/common/test_message_queue.cpp)
+
+target_include_directories(libocpp_common_unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(libocpp_common_unit_tests PRIVATE
+        ocpp
+        gtest_main
+        gmock_main
+)
+add_subdirectory(lib/ocpp/common)
+add_test(libocpp_common_unit_tests libocpp_common_unit_tests)
+
+#########################################################
+# Run OCPP v201 Tests
 
 add_executable(libocpp_unit_tests
         lib/ocpp/v201/test_component_state_manager.cpp)
@@ -45,11 +63,26 @@ target_link_libraries(libocpp_unit_tests PRIVATE
 target_sources(libocpp_unit_tests PRIVATE
         comparators.cpp)
 
-add_subdirectory(lib/ocpp/v16)
 add_subdirectory(lib/ocpp/v201)
-add_subdirectory(lib/ocpp/common)
 
 add_test(libocpp_unit_tests libocpp_unit_tests)
+
+#########################################################
+# Run OCPP v16 Tests
+
+add_executable(libocpp_v16_unit_tests
+        lib/ocpp/v16/test_smart_charging_handler.cpp)
+
+target_include_directories(libocpp_v16_unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(libocpp_v16_unit_tests PRIVATE
+        ocpp
+        gtest_main
+        gmock_main
+)
+
+add_test(libocpp_v16_unit_tests libocpp_v16_unit_tests)
+
+add_subdirectory(lib/ocpp/v16)
 
 #########################################################
 # Run Utils Tests
