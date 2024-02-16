@@ -22,7 +22,7 @@ target_link_libraries(database_tests PRIVATE
     date::date
     nlohmann_json::nlohmann_json
     nlohmann_json_schema_validator
-    gtest_main
+    GTest::gtest_main
     pthread
 )
 
@@ -37,8 +37,8 @@ add_executable(libocpp_common_unit_tests
 target_include_directories(libocpp_common_unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(libocpp_common_unit_tests PRIVATE
         ocpp
-        gtest_main
-        gmock_main
+        GTest::gtest_main
+        GTest::gmock_main
 )
 add_subdirectory(lib/ocpp/common)
 add_test(libocpp_common_unit_tests libocpp_common_unit_tests)
@@ -57,8 +57,8 @@ add_custom_command(TARGET libocpp_unit_tests POST_BUILD
 target_include_directories(libocpp_unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(libocpp_unit_tests PRIVATE
         ocpp
-        gtest_main
-        gmock_main
+        GTest::gtest_main
+        GTest::gmock_main
 )
 target_sources(libocpp_unit_tests PRIVATE
         comparators.cpp)
@@ -76,8 +76,8 @@ add_executable(libocpp_v16_unit_tests
 target_include_directories(libocpp_v16_unit_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(libocpp_v16_unit_tests PRIVATE
         ocpp
-        gtest_main
-        gmock_main
+        GTest::gtest_main
+        GTest::gmock_main
 )
 
 add_test(libocpp_v16_unit_tests libocpp_v16_unit_tests)
@@ -91,7 +91,7 @@ add_executable(utils_tests utils_tests.cpp)
 target_include_directories(utils_tests PUBLIC)
 target_link_libraries(utils_tests PRIVATE
         ocpp
-        gtest_main
+        GTest::gtest_main
 )
 
 add_test(utils_tests utils_tests)
