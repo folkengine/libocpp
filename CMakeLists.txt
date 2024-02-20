@@ -117,3 +117,5 @@ if(DOXYGEN_FOUND)
 else()
     message("Doxygen is needed to generate documentation")
 endif()
+
+enable_testing()
