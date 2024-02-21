@@ -5,6 +5,7 @@
 #define OCPP_OCSP_UPDATER_HPP
 
 #include <chrono>
+#include <condition_variable>
 #include <mutex>
 #include <stdexcept>
 #include <thread>
