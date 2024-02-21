@@ -3,12 +3,13 @@ include(FetchContent)
 FetchContent_Declare(
         gtest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG release-1.12.1   
+        GIT_TAG release-1.11.0
 )
 FetchContent_MakeAvailable(gtest)
 
 # GIT_TAG release-1.12.1   
 # GIT_TAG v1.14.0 
+# release-1.10.0
 
 #########################################################
 # Run Database Tests
