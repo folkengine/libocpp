@@ -44,13 +44,15 @@ public:
     void SetUp() override {
     }
 
-    // Adding transactiosn to the connectors because Profiles other than ChargePointMaxProfile need it in order to be valid.
+    // Adding transactiosn to the connectors because Profiles other than ChargePointMaxProfile need it in order to be
+    // valid.
     void addConnector(int id) {
         auto connector = Connector{id};
 
         auto timer = std::unique_ptr<Everest::SteadyTimer>();
 
-        connector.transaction = std::make_shared<Transaction>(id, "test", "test", 1, std::nullopt, ocpp::DateTime(), std::move(timer));
+        connector.transaction =
+            std::make_shared<Transaction>(id, "test", "test", 1, std::nullopt, ocpp::DateTime(), std::move(timer));
         connectors[id] = std::make_shared<Connector>(connector);
     }
 
@@ -71,22 +73,21 @@ public:
         return createChargingProfile(chargingSchedule, ChargingProfilePurposeType::TxDefaultProfile);
     }
 
-    ChargingProfile createChargingProfile(ChargingSchedule chargingSchedule, ChargingProfilePurposeType chargingProfilePurpose) {
+    ChargingProfile createChargingProfile(ChargingSchedule chargingSchedule,
+                                          ChargingProfilePurposeType chargingProfilePurpose) {
         auto chargingProfileId = 1;
         auto stackLevel = 1;
         auto chargingProfileKind = ChargingProfileKindType::Absolute;
         auto recurrencyKind = RecurrencyKindType::Daily;
-        return ChargingProfile{
-            chargingProfileId,
-            stackLevel,
-            chargingProfilePurpose,
-            chargingProfileKind,
-            chargingSchedule,
-            {}, // transactionId
-            recurrencyKind,
-            {}, // validFrom
-            {}  // validTo
-        };
+        return ChargingProfile{chargingProfileId,
+                               stackLevel,
+                               chargingProfilePurpose,
+                               chargingProfileKind,
+                               chargingSchedule,
+                               {},
+                               recurrencyKind,
+                               ocpp::DateTime("2024-01-01T00:00:00"),
+                               ocpp::DateTime("2024-03-19T00:00:00")};
     }
 
     /**
@@ -108,17 +109,15 @@ public:
         auto chargingProfilePurpose = ChargingProfilePurposeType::TxDefaultProfile;
         auto chargingProfileKind = ChargingProfileKindType::Absolute;
         auto recurrencyKind = RecurrencyKindType::Daily;
-        return ChargingProfile{
-            chargingProfileId,
-            stackLevel,
-            chargingProfilePurpose,
-            chargingProfileKind,
-            chargingSchedule,
-            {}, // transactionId
-            recurrencyKind,
-            {}, // validFrom
-            {}  // validTo
-        };
+        return ChargingProfile{chargingProfileId,
+                               stackLevel,
+                               chargingProfilePurpose,
+                               chargingProfileKind,
+                               chargingSchedule,
+                               {},
+                               recurrencyKind,
+                               {},
+                               {}};
     }
 
     /**
@@ -145,7 +144,7 @@ public:
                                chargingProfilePurpose,
                                chargingProfileKind,
                                chargingSchedule,
-                               {}, // transactionId
+                               {},
                                recurrencyKind,
                                {},
                                {}};
@@ -172,7 +171,6 @@ public:
         return handler;
     }
 
-
     SmartChargingHandler* createSmartChargingHandlerWithChargePointMaxProfile() {
         auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
         const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
@@ -194,6 +192,9 @@ public:
     const int profile_max_stack_level = 10;
     const int max_charging_profiles_installed = 20;
     const int charging_schedule_max_periods = 10;
+    const DateTime date_now = ocpp::DateTime();
+    const DateTime date_start_range = ocpp::DateTime("2023-01-01T00:00:00");
+    const DateTime date_end_range = ocpp::DateTime("2024-03-19T00:00:00");
 };
 
 /**
@@ -207,13 +208,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile) {
     auto handler = createSmartChargingHandler();
 
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_TRUE(sut);
 }
@@ -229,13 +226,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__example1) {
     auto handler = createSmartChargingHandler();
 
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_TRUE(sut);
 }
@@ -250,13 +243,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ConnectorIdGreaterThanConnectors
 
     const int connector_id = INT_MAX;
     bool sut = handler->validate_profile(
-        profile, 
-        connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -271,13 +260,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NegativeConnectorId
 
     const int connector_id = -1;
     bool sut = handler->validate_profile(
-        profile, 
-        connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -292,13 +277,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_ConnectorIdZero__Re
 
     profile.stackLevel = -1;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -313,13 +294,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_StackLevelGreaterTh
 
     profile.stackLevel = ChargepointTestFixture::profile_max_stack_level + 1;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -340,13 +317,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_ChargingProfileKind
     profile.chargingProfileKind = ChargingProfileKindType::Absolute;
     profile.chargingSchedule.startSchedule = std::nullopt;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -364,13 +337,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_AllowsNoStartSchedu
     profile.chargingProfileKind = ChargingProfileKindType::Absolute;
     profile.chargingSchedule.startSchedule = std::nullopt;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_TRUE(sut);
 }
@@ -386,13 +355,9 @@ TEST_F(ChargepointTestFixture,
 
     const int max_charging_profiles_installed = 0;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -408,13 +373,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_InvalidChargingSche
 
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::W};
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -431,13 +392,9 @@ TEST_F(ChargepointTestFixture,
     profile.chargingProfileKind = ChargingProfileKindType::Recurring;
     profile.recurrencyKind = std::nullopt;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -459,13 +416,9 @@ TEST_F(ChargepointTestFixture,
     profile.chargingProfileKind = ChargingProfileKindType::Recurring;
     profile.chargingSchedule.startSchedule = std::nullopt;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -481,13 +434,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NoStartScheduleAllo
     profile.chargingProfileKind = ChargingProfileKindType::Recurring;
     profile.chargingSchedule.startSchedule = std::nullopt;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_TRUE(sut);
 }
@@ -507,13 +456,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__RecurringNoStartScheduleNotAllow
     profile.chargingProfileKind = ChargingProfileKindType::Recurring;
     profile.chargingSchedule.startSchedule = std::nullopt;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -532,13 +477,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NotRecurrencyKindCo
     profile.chargingProfileKind = ChargingProfileKindType::Absolute;
     const int connector_id = 0;
     bool sut = handler->validate_profile(
-        profile, 
-        connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_TRUE(sut);
 }
@@ -558,14 +499,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfile_NotRecurrencyKindCo
     profile.chargingProfileKind = ChargingProfileKindType::Absolute;
     const int connector_id = 1;
     bool sut = handler->validate_profile(
-        profile, 
-        connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
-                                         
+        profile, connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -581,13 +517,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__ValidProfileTxDefaultProfile__Re
     profile.chargingProfilePurpose = ChargingProfilePurposeType::TxDefaultProfile;
     profile.chargingProfileKind = ChargingProfileKindType::Absolute;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_TRUE(sut);
 }
@@ -603,13 +535,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__AbsoluteTxProfileIgnoreNoTransac
     profile.chargingProfilePurpose = ChargingProfilePurposeType::TxProfile;
     profile.chargingProfileKind = ChargingProfileKindType::Absolute;
     bool sut = handler->validate_profile(
-        profile, 
-        ChargepointTestFixture::connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, ChargepointTestFixture::connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_TRUE(sut);
 }
@@ -626,13 +554,9 @@ TEST_F(ChargepointTestFixture, ValidateProfile__AbsoluteTxProfileConnectorId0__R
     profile.chargingProfilePurpose = ChargingProfilePurposeType::TxProfile;
     const int connector_id = 0;
     bool sut = handler->validate_profile(
-        profile, 
-        connector_id, 
-        ChargepointTestFixture::ignore_no_transaction, 
-        ChargepointTestFixture::profile_max_stack_level,
-        ChargepointTestFixture::max_charging_profiles_installed, 
-        ChargepointTestFixture::charging_schedule_max_periods,
-        charging_schedule_allowed_charging_rate_units);
+        profile, connector_id, ChargepointTestFixture::ignore_no_transaction,
+        ChargepointTestFixture::profile_max_stack_level, ChargepointTestFixture::max_charging_profiles_installed,
+        ChargepointTestFixture::charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
 
     ASSERT_FALSE(sut);
 }
@@ -689,39 +613,36 @@ TEST_F(ChargepointTestFixture, ClearAllProfilesWithFilter__NoMatchingProfileId_C
 
 /**
  * SmartChargingHandler::add_charge_point_max_profile tests
- * 
- * NOTE: The rest of these tests are being skipped because they are throwing Segmentation Faults on Linux architectures
- * for some reason. They are working on the same contain OSes on M2 Macs.
  */
 TEST_F(ChargepointTestFixture, AddChargePointMaxProfile) {
-    GTEST_SKIP();
     auto handler = createSmartChargingHandlerWithChargePointMaxProfile();
 
-    auto valid_profiles = handler->get_valid_profiles({}, {}, 0);
+    auto now = ocpp::DateTime();
+    auto valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, 0);
+    ASSERT_EQ(1, valid_profiles.size());
+
     auto retrieved = valid_profiles[0];
 
-    ASSERT_EQ(1, valid_profiles.size());
     ASSERT_EQ(ChargingProfilePurposeType::ChargePointMaxProfile, retrieved.chargingProfilePurpose);
     ASSERT_EQ(ChargingProfileKindType::Absolute, retrieved.chargingProfileKind);
 }
 
 /**
  * SmartChargingHandler::add_charge_point_max_profile tests
- * 
+ *
  * The add_charge_point_max_profile method accepts a profile that is not a ChargePointMaxProfile.
  */
- TEST_F(ChargepointTestFixture, AddChargePointMaxProfile__InvalidProfileType__ShouldNotWorkButDoes) {
-    GTEST_SKIP();
+TEST_F(ChargepointTestFixture, AddChargePointMaxProfile__InvalidProfileType__ShouldNotWorkButDoes) {
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
     auto handler = createSmartChargingHandler();
-    bool is_profile_valid = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
-                                         max_charging_profiles_installed, charging_schedule_max_periods,
-                                         charging_schedule_allowed_charging_rate_units);
+    bool is_profile_valid = handler->validate_profile(
+        profile, connector_id, ignore_no_transaction, profile_max_stack_level, max_charging_profiles_installed,
+        charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
     ASSERT_TRUE(is_profile_valid);
 
     handler->add_charge_point_max_profile(profile);
-    auto valid_profiles = handler->get_valid_profiles({}, {}, 0);
+    auto valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, 0);
     auto retrieved = valid_profiles[0];
 
     ASSERT_EQ(1, valid_profiles.size());
@@ -730,14 +651,12 @@ TEST_F(ChargepointTestFixture, AddChargePointMaxProfile) {
 }
 
 TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0) {
-    GTEST_SKIP();
-    std::cout << ">>> AddTxDefaultProfile_ConnectorId_gt_0\n";
     auto handler = createSmartChargingHandler(1);
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
-    bool is_profile_valid = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
-                                         max_charging_profiles_installed, charging_schedule_max_periods,
-                                         charging_schedule_allowed_charging_rate_units);
+    bool is_profile_valid = handler->validate_profile(
+        profile, connector_id, ignore_no_transaction, profile_max_stack_level, max_charging_profiles_installed,
+        charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
     ASSERT_TRUE(is_profile_valid);
 
     const int connector_id = 0;
@@ -745,49 +664,46 @@ TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0) {
     // While the connector id is 0 when it is added, it is retrieved with a connector id of 1
     // See AddTxDefaultProfile_ConnectorId_eq_0_Retrieved_at_0__NoProfilesReturned for a demonstration of this behavior
     const int retrieved_connector_id = 1;
-    auto valid_profiles = handler->get_valid_profiles({}, {}, retrieved_connector_id);
+    auto valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, retrieved_connector_id);
     auto retrieved = valid_profiles[0];
 
     ASSERT_EQ(1, valid_profiles.size());
     ASSERT_EQ(ChargingProfileKindType::Absolute, retrieved.chargingProfileKind);
     ASSERT_EQ(ChargingProfilePurposeType::TxDefaultProfile, retrieved.chargingProfilePurpose);
- }
+}
 
- TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0_Retrieved_at_0__NoProfilesReturned) {
-    GTEST_SKIP();
-    std::cout << ">>> AddTxDefaultProfile_ConnectorId_eq_0_Retrieved_at_0__ThrowsException\n";
+TEST_F(ChargepointTestFixture, AddTxDefaultProfile_ConnectorId_eq_0_Retrieved_at_0__NoProfilesReturned) {
     auto handler = createSmartChargingHandler(1);
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
-    bool is_profile_valid = handler->validate_profile(profile, connector_id, ignore_no_transaction, profile_max_stack_level,
-                                         max_charging_profiles_installed, charging_schedule_max_periods,
-                                         charging_schedule_allowed_charging_rate_units);
+    bool is_profile_valid = handler->validate_profile(
+        profile, connector_id, ignore_no_transaction, profile_max_stack_level, max_charging_profiles_installed,
+        charging_schedule_max_periods, charging_schedule_allowed_charging_rate_units);
     ASSERT_TRUE(is_profile_valid);
 
     const int connector_id = 0;
     handler->add_tx_default_profile(profile, connector_id);
     // When profiles are retrieved with the same connector id of 0, nothing is returned
     // See AddTxDefaultProfile_ConnectorId_eq_0 for a demonstration of how to retrieve the profile
-    auto valid_profiles = handler->get_valid_profiles({}, {}, connector_id);
+    auto valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, connector_id);
 
     ASSERT_EQ(0, valid_profiles.size());
- }
+}
 
 /**
  * SmartChargingHandler::add_tx_default_profile test
  */
 TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorId_gt_0) {
-    GTEST_SKIP();
     auto handler = createSmartChargingHandlerWithChargePointMaxProfile();
-    auto valid_profiles = handler->get_valid_profiles({}, {}, 0);
+    auto valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, 0);
     ASSERT_EQ(1, valid_profiles.size());
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
-    
+
     const int connector_id = 2;
     handler->add_tx_default_profile(profile, connector_id);
 
-    valid_profiles = handler->get_valid_profiles({}, {}, connector_id);
+    valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, connector_id);
     ASSERT_EQ(2, valid_profiles.size());
     auto chargepoint_max_profile = valid_profiles[0];
     ASSERT_EQ(ChargingProfilePurposeType::ChargePointMaxProfile, chargepoint_max_profile.chargingProfilePurpose);
@@ -800,9 +716,8 @@ TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorId_gt_0) {
 /**
  * SmartChargingHandler::add_tx_default_profile() will throw an std::out_of_range Exception if the connector_id is
  * greater than the number of connectors in the SmartChargingHandler's connectors map.
- */ 
+ */
 TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorIdOverMax__ThrowsException) {
-    GTEST_SKIP();
     auto handler = createSmartChargingHandler();
 
     auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A));
@@ -824,17 +739,17 @@ TEST_F(ChargepointTestFixture, AddTxDefaultProfile__ConnectorIdOverMax__ThrowsEx
  * SmartChargingHandler::add_tx_profile
  */
 TEST_F(ChargepointTestFixture, AddTxProfile) {
-    GTEST_SKIP();
     auto handler = createSmartChargingHandlerWithChargePointMaxProfile();
-    auto valid_profiles = handler->get_valid_profiles({}, {}, 0);
+    auto valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, 0);
     ASSERT_EQ(1, valid_profiles.size());
-    auto profile = createChargingProfile(createChargeSchedule(ChargingRateUnit::A), ChargingProfilePurposeType::TxProfile);
+    auto profile =
+        createChargingProfile(createChargeSchedule(ChargingRateUnit::A), ChargingProfilePurposeType::TxProfile);
     const std::vector<ChargingRateUnit>& charging_schedule_allowed_charging_rate_units{ChargingRateUnit::A};
-    
+
     const int connector_id = 2;
     handler->add_tx_profile(profile, connector_id);
 
-    valid_profiles = handler->get_valid_profiles({}, {}, connector_id);
+    valid_profiles = handler->get_valid_profiles(date_start_range, date_end_range, connector_id);
     ASSERT_EQ(2, valid_profiles.size());
     auto chargepoint_max_profile = valid_profiles[0];
     ASSERT_EQ(ChargingProfilePurposeType::ChargePointMaxProfile, chargepoint_max_profile.chargingProfilePurpose);
