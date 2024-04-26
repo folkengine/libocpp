@@ -20,6 +20,7 @@ const int DEFAULT_AND_MAX_NUMBER_PHASES = 3;
 enum class ProfileValidationResultEnum {
     Valid,
     EvseDoesNotExist,
+    InvalidProfileType,
     TxProfileMissingTransactionId,
     TxProfileEvseIdNotGreaterThanZero,
     TxProfileTransactionNotOnEvse,
@@ -33,6 +34,8 @@ enum class ProfileValidationResultEnum {
     ChargingSchedulePeriodInvalidPhaseToUse,
     ChargingSchedulePeriodUnsupportedNumberPhases,
     ChargingSchedulePeriodExtraneousPhaseValues,
+    ChargingStationMaxProfileCannotBeRelative,
+    ChargingStationMaxProfileEvseIdGreaterThanZero,
     DuplicateTxDefaultProfileFound,
     DuplicateProfileValidityPeriod
 };
@@ -63,6 +66,13 @@ public:
     /// \brief validates the existence of the given \p evse_id according to the specification
     ///
     ProfileValidationResultEnum validate_evse_exists(int32_t evse_id) const;
+
+    ///
+    /// \brief validates requirements that apply only to the ChargingStationMaxProfile \p profile
+    /// according to the specification
+    ///
+    ProfileValidationResultEnum validate_charging_station_max_profile(const ChargingProfile& profile,
+                                                                      EvseInterface& evse) const;
 
     ///
     /// \brief validates the given \p profile and associated \p evse_id according to the specification
