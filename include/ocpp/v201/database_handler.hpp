@@ -121,6 +121,7 @@ public:
 
     /// \brief Inserts or updates the given \p profile to CHARGING_PROFILES table
     virtual void insert_or_update_charging_profile(const int evse_id, const v201::ChargingProfile& profile);
+
 };
 
 } // namespace v201
