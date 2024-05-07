@@ -121,6 +121,9 @@ public:
 
     /// \brief Inserts or updates the given \p profile to CHARGING_PROFILES table
     virtual void insert_or_update_charging_profile(const int evse_id, const v201::ChargingProfile& profile);
+
+    /// \brief Retrieves all ChargingProfiles
+    virtual std::vector<v201::ChargingProfile> get_all_charging_profiles();
 };
 
 } // namespace v201

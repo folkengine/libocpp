@@ -65,4 +65,21 @@ TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_InsertNewProfile) {
     ASSERT_EQ(count, 2);
 }
 
+TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_ShouldReturnAllProfiles) {
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{1, 1});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{2, 1});
+
+    auto sut = db_handler->get_all_charging_profiles();
+
+    ASSERT_EQ(sut.size(), 2);
+
+    auto cp1 = sut[0];
+    ASSERT_EQ(cp1.id, 1);
+    ASSERT_EQ(cp1.stackLevel, 1);
+
+    auto cp2 = sut[1];
+    ASSERT_EQ(cp2.id, 2);
+    ASSERT_EQ(cp2.stackLevel, 1);
+}
+
 } // namespace ocpp::v201

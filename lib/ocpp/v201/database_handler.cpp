@@ -582,5 +582,18 @@ void DatabaseHandler::insert_or_update_charging_profile(const int evse_id, const
     }
 }
 
+std::vector<v201::ChargingProfile> DatabaseHandler::get_all_charging_profiles() {
+
+    std::vector<v201::ChargingProfile> profiles;
+    std::string sql = "SELECT * FROM CHARGING_PROFILES";
+    auto stmt = this->database->new_statement(sql);
+
+    while (stmt->step() != SQLITE_DONE) {
+        profiles.emplace_back(json::parse(stmt->column_text(2)));
+    }
+
+    return profiles;
+}
+
 } // namespace v201
 } // namespace ocpp
