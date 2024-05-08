@@ -65,6 +65,12 @@ TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_InsertNewProfile) {
     ASSERT_EQ(count, 2);
 }
 
+TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithNoProfileData_ShouldReturnNothing) {
+    auto sut = db_handler->get_all_charging_profiles();
+
+    ASSERT_EQ(sut.size(), 0);
+}
+
 TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_ShouldReturnAllProfiles) {
     db_handler->insert_or_update_charging_profile(1, ChargingProfile{1, 1});
     db_handler->insert_or_update_charging_profile(1, ChargingProfile{2, 1});
