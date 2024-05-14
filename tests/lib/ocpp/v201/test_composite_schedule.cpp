@@ -288,25 +288,73 @@ protected:
 };
 
 /**
+ * Validates the SmartChargingHandler::determined_duraction and SmartChargingHandler::within_time_window
+ * utility functions.
+ */
+TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_DetermineDurationAndWitinTimeWindow) {
+    // Test 1: Start time before end time
+    {
+        DateTime start_time = ocpp::DateTime("2024-01-17T17:59:59");
+        DateTime end_time = ocpp::DateTime("2024-01-17T18:00:00");
+
+        int32_t duration = SmartChargingHandler::determine_duraction(start_time, end_time);
+
+        ASSERT_EQ(duration, 1);
+        ASSERT_TRUE(SmartChargingHandler::within_time_window(start_time, end_time));
+    }
+
+    // Test 2: Start time equals end time
+    {
+        DateTime start_time = ocpp::DateTime("2024-01-17T17:59:59");
+        DateTime end_time = ocpp::DateTime("2024-01-17T17:59:59");
+
+        int32_t duration = SmartChargingHandler::determine_duraction(start_time, end_time);
+        bool within_time_window = SmartChargingHandler::within_time_window(start_time, end_time);
+
+        ASSERT_EQ(duration, 0);
+        ASSERT_FALSE(SmartChargingHandler::within_time_window(start_time, end_time));
+    }
+
+    // Test 3: Start time after end time
+    {
+        DateTime start_time = ocpp::DateTime("2024-01-17T18:00:00");
+        DateTime end_time = ocpp::DateTime("2024-01-17T17:59:59");
+
+        int32_t duration = SmartChargingHandler::determine_duraction(start_time, end_time);
+        bool within_time_window = SmartChargingHandler::within_time_window(start_time, end_time);
+
+        ASSERT_EQ(duration, -1);
+        ASSERT_FALSE(SmartChargingHandler::within_time_window(start_time, end_time));
+    }
+}
+
+/**
  * Calculate Composite Schedule
  */
-TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_noChargingRateUnit_DefaultsToA) {
+TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_InitializeEnhancedCompositeSchedule) {
     create_evse_with_id(DEFAULT_EVSE_ID);
     const DateTime start_time = ocpp::DateTime("2024-01-17T17:59:59");
     const DateTime end_time = ocpp::DateTime("2024-01-18T00:00:00");
     std::vector<ChargingProfile> profiles = getBaselineProfileVector();
-    auto expected_duration =
-        std::chrono::duration_cast<std::chrono::seconds>(end_time.to_time_point() - start_time.to_time_point()).count();
 
     CompositeSchedule composite_schedule =
         handler.calculate_composite_schedule(profiles, start_time, end_time, DEFAULT_EVSE_ID, ChargingRateUnitEnum::A);
 
     ASSERT_EQ(ChargingRateUnitEnum::A, composite_schedule.chargingRateUnit);
     ASSERT_EQ(DEFAULT_EVSE_ID, composite_schedule.evseId);
-    ASSERT_EQ(expected_duration, composite_schedule.duration);
+    ASSERT_EQ(21601, composite_schedule.duration);
     ASSERT_EQ(start_time, composite_schedule.scheduleStart);
     ASSERT_EQ(composite_schedule.chargingSchedulePeriod.size(), 0);
     log_me(composite_schedule);
 }
 
 } // namespace ocpp::v201
+
+// auto profile_1 = create_charging_profile(DEFAULT_PROFILE_ID, ChargingProfilePurposeEnum::TxProfile,
+//                                          create_charge_schedule(ChargingRateUnitEnum::A), uuid(),
+//                                          ChargingProfileKindEnum::Absolute, 1);
+
+// profile_1.validFrom = start_time;
+// profile_1.validTo = end_time;
+
+// log_me(profile_1);

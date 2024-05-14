@@ -43,6 +43,18 @@ std::string profile_validation_result_to_string(ProfileValidationResultEnum e);
 
 std::ostream& operator<<(std::ostream& os, const ProfileValidationResultEnum validation_result);
 
+/// \brief Helper struct to calculate Composite Schedule
+struct LimitStackLevelPair {
+    int limit;
+    int stack_level;
+};
+
+/// \brief Helper struct to calculate Composite Schedule
+struct PeriodDateTimePair {
+    std::optional<ChargingSchedulePeriod> period;
+    ocpp::DateTime end_time;
+};
+
 /// \brief This class handles and maintains incoming ChargingProfiles and contains the logic
 /// to calculate the composite schedules
 class SmartChargingHandler {
@@ -89,6 +101,10 @@ public:
     CompositeSchedule calculate_composite_schedule(std::vector<ChargingProfile> valid_profiles,
                                                    const ocpp::DateTime& start_time, const ocpp::DateTime& end_time,
                                                    const int32_t evse_id, ChargingRateUnitEnum charging_rate_unit);
+
+    static int32_t determine_duraction(const ocpp::DateTime& start_time, const ocpp::DateTime& end_time);
+
+    static bool within_time_window(const ocpp::DateTime& start_time, const ocpp::DateTime& end_time);
 
 private:
     std::vector<ChargingProfile> get_evse_specific_tx_default_profiles() const;

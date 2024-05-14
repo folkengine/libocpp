@@ -238,6 +238,14 @@ SmartChargingHandler::initialize_enhanced_composite_schedule(const ocpp::DateTim
     return composite_schedule;
 }
 
+int32_t SmartChargingHandler::determine_duraction(const ocpp::DateTime& start_time, const ocpp::DateTime& end_time) {
+    return duration_cast<seconds>(end_time.to_time_point() - start_time.to_time_point()).count();
+}
+
+bool SmartChargingHandler::within_time_window(const ocpp::DateTime& start_time, const ocpp::DateTime& end_time) {
+    return SmartChargingHandler::determine_duraction(start_time, end_time) > 0;
+}
+
 ///
 /// \brief Calculates the composite schedule for the given \p valid_profiles and the given \p connector_id
 ///
