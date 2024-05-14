@@ -1,0 +1,21 @@
+{
+    "chargingProfileKind": "Absolute",
+    "chargingProfilePurpose": "TxProfile",
+    "chargingSchedule": [
+        {
+            "chargingRateUnit": "A",
+            "chargingSchedulePeriod": [
+                {
+                    "limit": 2000.0,
+                    "numberPhases": 1,
+                    "startPeriod": 0
+                }
+            ],
+            "id": 0
+        }
+    ],
+    "id": 1,
+    "recurrencyKind": "Daily",
+    "stackLevel": 1,
+    "transactionId": "f1522902-1170-416f-8e43-9e3bce28fab7"
+}
