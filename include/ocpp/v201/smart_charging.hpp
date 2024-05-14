@@ -31,6 +31,7 @@ enum class ProfileValidationResultEnum {
     ChargingProfileFirstStartScheduleIsNotZero,
     ChargingProfileMissingRequiredStartSchedule,
     ChargingProfileExtraneousStartSchedule,
+    ChargingScheduleChargingRateUnitUnsupported,
     ChargingSchedulePeriodsOutOfOrder,
     ChargingSchedulePeriodInvalidPhaseToUse,
     ChargingSchedulePeriodUnsupportedNumberPhases,
