@@ -55,7 +55,7 @@ TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_UpdateProfile) {
 
 TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_InsertNewProfile) {
     db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 1, .stackLevel = 1});
-    db_handler->insert_or_update_charging_profile(1, ChargingProfile{2, 1});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 2, .stackLevel = 1});
 
     std::string sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
     auto select_stmt = db_connection->new_statement(sql);
