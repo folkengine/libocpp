@@ -1,4 +1,5 @@
 
+#include "ocpp/common/database/sqlite_statement.hpp"
 #include "ocpp/v201/database_handler.hpp"
 #include "ocpp/v201/ocpp_types.hpp"
 #include <gmock/gmock.h>
@@ -30,7 +31,7 @@ protected:
 };
 
 TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithNoData_InsertProfile) {
-    db_handler->insert_or_update_charging_profile(1, ChargingProfile{1, 1});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 1, .stackLevel = 1});
     std::string sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
     auto select_stmt = db_connection->new_statement(sql);
 
@@ -40,8 +41,8 @@ TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithNoData_InsertProfile) {
 }
 
 TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_UpdateProfile) {
-    db_handler->insert_or_update_charging_profile(1, ChargingProfile{2, 1});
-    db_handler->insert_or_update_charging_profile(1, ChargingProfile{2, 2});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 2, .stackLevel = 1});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 2, .stackLevel = 2});
 
     std::string sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
     auto select_stmt = db_connection->new_statement(sql);
@@ -53,7 +54,7 @@ TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_UpdateProfile) {
 }
 
 TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_InsertNewProfile) {
-    db_handler->insert_or_update_charging_profile(1, ChargingProfile{1, 1});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 1, .stackLevel = 1});
     db_handler->insert_or_update_charging_profile(1, ChargingProfile{2, 1});
 
     std::string sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
@@ -63,6 +64,93 @@ TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_InsertNewProfile) {
 
     auto count = select_stmt->column_int(0);
     ASSERT_EQ(count, 2);
+}
+
+TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_DeleteRemovesSpecifiedProfiles) {
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 1, .stackLevel = 1});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 2, .stackLevel = 1});
+
+    auto sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
+
+    auto select_stmt = db_connection->new_statement(sql);
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 2);
+    } while (select_stmt->step() != SQLITE_DONE);
+
+    db_handler->delete_charging_profile(1);
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 1);
+    } while (select_stmt->step() != SQLITE_DONE);
+}
+
+TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithProfileData_DeleteAllRemovesAllProfiles) {
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 1, .stackLevel = 1});
+    db_handler->insert_or_update_charging_profile(1, ChargingProfile{.id = 2, .stackLevel = 1});
+
+    auto sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
+
+    auto select_stmt = db_connection->new_statement(sql);
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 2);
+    } while (select_stmt->step() != SQLITE_DONE);
+
+    db_handler->delete_charging_profiles();
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 0);
+    } while (select_stmt->step() != SQLITE_DONE);
+}
+
+TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseWithNoProfileData_DeleteAllDoesNotFail) {
+
+    auto sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
+
+    auto select_stmt = db_connection->new_statement(sql);
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 0);
+    } while (select_stmt->step() != SQLITE_DONE);
+
+    db_handler->delete_charging_profiles();
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 0);
+    } while (select_stmt->step() != SQLITE_DONE);
+}
+
+TEST_F(DatabaseHandlerV201, KO1_FR27_DatabaseNoProfileData_DeleteAllDoesNotFail) {
+    auto sql = "SELECT COUNT(*) FROM CHARGING_PROFILES";
+
+    auto select_stmt = db_connection->new_statement(sql);
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 0);
+    } while (select_stmt->step() != SQLITE_DONE);
+
+    db_handler->delete_charging_profiles();
+
+    do {
+        ASSERT_TRUE(select_stmt->step() == SQLITE_ROW);
+        auto count = select_stmt->column_int(0);
+        ASSERT_EQ(count, 0);
+    } while (select_stmt->step() != SQLITE_DONE);
 }
 
 } // namespace ocpp::v201
