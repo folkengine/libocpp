@@ -96,15 +96,42 @@ public:
     void add_profile(int32_t evse_id, ChargingProfile& profile);
 
     ///
+    /// \brief Iterates over the periods of the given \p profile and returns a struct that contains the period and the
+    /// absolute end time of the period that refers to the given absoulte \p time as a pair.
+    ///
+    PeriodDateTimePair find_period_at(const ocpp::DateTime& time, const ChargingProfile& profile,
+                                      const int connector_id);
+
+    ///
+    /// \brief Gets the absolute start time of the given \p profile for the given \p connector_id for different profile
+    /// purposes
+    ///
+    std::optional<ocpp::DateTime> get_profile_start_time(const ChargingProfile& profile, const ocpp::DateTime& time,
+                                                         const int connector_id);
+
+    ///
     /// \brief Calculates the composite schedule for the given \p valid_profiles and the given \p connector_id
     ///
     CompositeSchedule calculate_composite_schedule(std::vector<ChargingProfile> valid_profiles,
                                                    const ocpp::DateTime& start_time, const ocpp::DateTime& end_time,
                                                    const int32_t evse_id, ChargingRateUnitEnum charging_rate_unit);
 
-    static int32_t determine_duraction(const ocpp::DateTime& start_time, const ocpp::DateTime& end_time);
+    static int32_t determine_duration(const ocpp::DateTime& start_time, const ocpp::DateTime& end_time);
 
     static bool within_time_window(const ocpp::DateTime& start_time, const ocpp::DateTime& end_time);
+
+    ///
+    /// \brief Iterates over the periods of the given \p valid_profiles and determines the earliest next absolute period
+    /// end time later than \p temp_time
+    ///
+    ocpp::DateTime get_next_temp_time(const ocpp::DateTime temp_time,
+                                      const std::vector<ChargingProfile>& valid_profiles, const int32_t evse_id);
+
+    ///
+    /// \brief Returns the ChargingSchedulePeriod with the lowest limit. Working under the idea that when there are
+    /// ChargingSchedulePeriods that apply within a Profile thenone with the lowest limit takes precedence
+    ///
+    // ChargingSchedulePeriod lowest_limit(std::vector<ChargingSchedulePeriod> periods);
 
 private:
     std::vector<ChargingProfile> get_evse_specific_tx_default_profiles() const;
@@ -112,6 +139,7 @@ private:
     CompositeSchedule initialize_enhanced_composite_schedule(const ocpp::DateTime& start_time,
                                                              const ocpp::DateTime& end_time, const int32_t evse_id,
                                                              ChargingRateUnitEnum charging_rate_unit);
+    std::map<ChargingProfilePurposeEnum, LimitStackLevelPair> get_initial_purpose_and_stack_limits();
 };
 
 } // namespace ocpp::v201
