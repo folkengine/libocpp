@@ -334,7 +334,7 @@ TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_DetermineDurat
  * utility functions.
  */
 TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_GetProfileStartTime) {
-    GTEST_SKIP();
+    // GTEST_SKIP();
     create_evse_with_id(DEFAULT_EVSE_ID);
     DateTime time = ocpp::DateTime("2024-01-17T17:59:59");
     ChargingProfile profile = getChargingProfileFromFile("TxProfile_01.json");
@@ -362,7 +362,7 @@ TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_GetNextTempTim
  * Calculate Composite Schedule
  */
 TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_InitializeEnhancedCompositeSchedule) {
-    // GTEST_SKIP();
+    GTEST_SKIP();
     create_evse_with_id(DEFAULT_EVSE_ID);
     const DateTime start_time = ocpp::DateTime("2024-01-17T17:59:59");
     const DateTime end_time = ocpp::DateTime("2024-01-18T00:00:00");

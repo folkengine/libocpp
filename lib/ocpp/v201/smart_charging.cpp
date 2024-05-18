@@ -270,7 +270,10 @@ CompositeSchedule SmartChargingHandler::calculate_composite_schedule(std::vector
 
     // calculate every ChargingSchedulePeriod of result within this while loop
     while (SmartChargingHandler::within_time_window(start_time, end_time)) {
-        EVLOG_verbose << "boop!";
+        // EVLOG_verbose << "verbose boop!";
+        // EVLOG_debug << "debug boop!";
+        // EVLOG_info << "info boop!";
+        // EVLOG_warning << "warning boop!";
         auto current_purpose_and_stack_limits =
             get_initial_purpose_and_stack_limits(); // this data structure holds the current lowest limit and stack
                                                     // level for every purpose
@@ -370,9 +373,8 @@ std::optional<ocpp::DateTime> SmartChargingHandler::get_profile_start_time(const
         }
 
         // EVLOG_info << "ChargingProfile: " << to_string(profile);
-
-        return period_start_time;
     }
+    return period_start_time;
 }
 
 std::map<ChargingProfilePurposeEnum, LimitStackLevelPair> SmartChargingHandler::get_initial_purpose_and_stack_limits() {
