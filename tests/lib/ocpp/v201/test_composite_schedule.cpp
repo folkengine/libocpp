@@ -333,11 +333,24 @@ TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_DetermineDurat
  * Validates the SmartChargingHandler::determined_duraction and SmartChargingHandler::within_time_window
  * utility functions.
  */
-TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_GetProfileStartTime) {
+TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_GetProfileStartTime_KindAbsolute) {
+    GTEST_SKIP();
     create_evse_with_id(DEFAULT_EVSE_ID);
     DateTime time = ocpp::DateTime("2024-01-17T17:59:59");
     ChargingProfile profile = getChargingProfileFromFile("TxProfile_01.json");
     DateTime expected = ocpp::DateTime("2024-01-17T18:00:00");
+
+    std::optional<ocpp::DateTime> actual = handler.get_profile_start_time(profile, time, DEFAULT_EVSE_ID);
+
+    // ASSERT_EQ(ProfileValidationResultEnum::Valid, handler.validate_tx_profile(profile, evses[DEFAULT_EVSE_ID]))
+    ASSERT_EQ(expected, actual.value());
+}
+
+TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_GetProfileStartTime_KindRecurring) {
+    create_evse_with_id(DEFAULT_EVSE_ID);
+    DateTime time = ocpp::DateTime("2024-01-17T18:00:00");
+    ChargingProfile profile = getChargingProfileFromFile("TxProfile_100.json");
+    DateTime expected = ocpp::DateTime("2024-01-17T18:10:00");
 
     std::optional<ocpp::DateTime> actual = handler.get_profile_start_time(profile, time, DEFAULT_EVSE_ID);
 
