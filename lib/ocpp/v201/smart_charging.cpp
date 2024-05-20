@@ -355,13 +355,12 @@ std::optional<ocpp::DateTime> SmartChargingHandler::get_profile_start_time(const
     for (const ChargingSchedule schedule : profile.chargingSchedule) {
         if (profile.chargingProfileKind == ChargingProfileKindEnum::Absolute) {
             if (schedule.startSchedule) {
-                EVLOG_info << "get_profile_start_time> Absolute> " << schedule.startSchedule.value().to_rfc3339();
+                EVLOG_debug << "get_profile_start_time> Absolute> " << schedule.startSchedule.value().to_rfc3339();
                 period_start_time.emplace(
                     ocpp::DateTime(floor<seconds>(schedule.startSchedule.value().to_time_point())));
             } else {
                 EVLOG_warning << "Absolute profile with no startSchedule, this should not be possible";
             }
-
         } else if (profile.chargingProfileKind == ChargingProfileKindEnum::Relative) {
             // TODO
             // if (this->evses.at(evse_id)->has_active_transaction()) {
