@@ -43,8 +43,8 @@ std::string profile_validation_result_to_string(ProfileValidationResultEnum e);
 
 std::ostream& operator<<(std::ostream& os, const ProfileValidationResultEnum validation_result);
 
-/// \brief This class handles and maintains incoming ChargingProfiles and contains the logic
-/// to calculate the composite schedules
+/// \brief Handles and maintains incoming ChargingProfiles and contains the
+/// logic to calculate composite schedules.
 class SmartChargingHandler {
 private:
     std::map<int32_t, std::unique_ptr<EvseInterface>>& evses;
@@ -58,21 +58,21 @@ public:
     explicit SmartChargingHandler(std::map<int32_t, std::unique_ptr<EvseInterface>>& evses);
 
     ///
-    /// \brief validates the existence of the given \p evse_id according to the specification
+    /// \brief Validates the existence of the given \p evse_id according to the specification
     ///
     ProfileValidationResultEnum validate_evse_exists(int32_t evse_id) const;
 
     ///
-    /// \brief validates the given \p profile and associated \p evse_id according to the specification
+    /// \brief Validates the given \p profile and associated \p evse_id according to the specification
     ///
     ProfileValidationResultEnum validate_tx_default_profile(const ChargingProfile& profile, int32_t evse_id) const;
 
     ///
-    /// \brief validates the given \p profile according to the specification
+    /// \brief Validates the given \p profile according to the specification
     ///
     ProfileValidationResultEnum validate_tx_profile(const ChargingProfile& profile, EvseInterface& evse) const;
 
-    /// \brief validates that the given \p profile has valid charging schedules.
+    /// \brief Validates that the given \p profile has valid charging schedules.
     /// If a profiles charging schedule period does not have a valid numberPhases,
     /// we set it to the default value (3).
     ProfileValidationResultEnum validate_profile_schedules(ChargingProfile& profile,
