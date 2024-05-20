@@ -368,25 +368,29 @@ std::optional<ocpp::DateTime> SmartChargingHandler::get_profile_start_time(const
             //         this->evses.at(evse_id)->get_transaction()->get_start_energy_wh()->timestamp.to_time_point())));
             // }
         } else if (profile.chargingProfileKind == ChargingProfileKindEnum::Recurring) {
-            EVLOG_verbose << "get_profile_start_time> Recurring> " << schedule.startSchedule.value().to_rfc3339();
+            if (schedule.startSchedule) {
+                EVLOG_verbose << "get_profile_start_time> Recurring> " << schedule.startSchedule.value().to_rfc3339();
 
-            // TODO ?: What if startSchedule is not set? This use case is not handled in the 1.6 code
-            const ocpp::DateTime start_schedule =
-                ocpp::DateTime(std::chrono::floor<seconds>(schedule.startSchedule.value().to_time_point()));
-            int seconds_to_go_back;
+                // TODO ?: What if startSchedule is not set? This use case is not handled in the 1.6 code
+                const ocpp::DateTime start_schedule =
+                    ocpp::DateTime(std::chrono::floor<seconds>(schedule.startSchedule.value().to_time_point()));
+                int seconds_to_go_back;
 
-            if (profile.recurrencyKind.value() == RecurrencyKindEnum::Daily) {
-                seconds_to_go_back =
-                    duration_cast<seconds>(time.to_time_point() - start_schedule.to_time_point()).count() %
-                    (HOURS_PER_DAY * SECONDS_PER_HOUR);
+                if (profile.recurrencyKind.value() == RecurrencyKindEnum::Daily) {
+                    seconds_to_go_back =
+                        duration_cast<seconds>(time.to_time_point() - start_schedule.to_time_point()).count() %
+                        (HOURS_PER_DAY * SECONDS_PER_HOUR);
+                } else {
+                    seconds_to_go_back =
+                        duration_cast<seconds>(time.to_time_point() - start_schedule.to_time_point()).count() %
+                        (SECONDS_PER_DAY * DAYS_PER_WEEK);
+                }
+                auto time_minus_seconds_to_go_back = time.to_time_point() - seconds(seconds_to_go_back);
+                EVLOG_info << "get_profile_start_time> Recurring> " << time_minus_seconds_to_go_back;
+                period_start_time.emplace(ocpp::DateTime(time_minus_seconds_to_go_back));
             } else {
-                seconds_to_go_back =
-                    duration_cast<seconds>(time.to_time_point() - start_schedule.to_time_point()).count() %
-                    (SECONDS_PER_DAY * DAYS_PER_WEEK);
+                EVLOG_warning << "Recurring profile with no startSchedule, this should not be possible";
             }
-            auto time_minus_seconds_to_go_back = time.to_time_point() - seconds(seconds_to_go_back);
-            EVLOG_info << "get_profile_start_time> Recurring> " << time_minus_seconds_to_go_back;
-            period_start_time.emplace(ocpp::DateTime(time_minus_seconds_to_go_back));
         }
 
         // EVLOG_info << "ChargingProfile: " << to_string(profile);

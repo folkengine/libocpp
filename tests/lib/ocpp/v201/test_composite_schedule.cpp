@@ -342,7 +342,6 @@ TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_GetProfileStar
 
     std::optional<ocpp::DateTime> actual = handler.get_profile_start_time(profile, time, DEFAULT_EVSE_ID);
 
-    // ASSERT_EQ(ProfileValidationResultEnum::Valid, handler.validate_tx_profile(profile, evses[DEFAULT_EVSE_ID]))
     ASSERT_EQ(expected, actual.value());
 }
 
@@ -354,7 +353,6 @@ TEST_F(ChargepointTestFixtureV201, K08_CalculateCompositeSchedule_GetProfileStar
 
     std::optional<ocpp::DateTime> actual = handler.get_profile_start_time(profile, time, DEFAULT_EVSE_ID);
 
-    // ASSERT_EQ(ProfileValidationResultEnum::Valid, handler.validate_tx_profile(profile, evses[DEFAULT_EVSE_ID]))
     ASSERT_EQ(expected, actual.value());
 }
 
