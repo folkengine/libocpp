@@ -200,6 +200,20 @@ void SmartChargingHandler::add_profile(int32_t evse_id, ChargingProfile& profile
     }
 }
 
+ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
+    const ocpp::DateTime& start_time,
+    const ocpp::DateTime& end_time,
+    const int evse_id,
+    std::optional<ChargingRateUnitEnum> charging_rate_unit
+) {
+    return ChargingSchedule{
+        .id = 1,
+        .chargingSchedulePeriod = {
+            ChargingSchedulePeriod { .startPeriod = 0, .limit = 867.5309 }
+        }
+    };
+}
+
 std::vector<ChargingProfile> SmartChargingHandler::get_evse_specific_tx_default_profiles() const {
     std::vector<ChargingProfile> evse_specific_tx_default_profiles;
 

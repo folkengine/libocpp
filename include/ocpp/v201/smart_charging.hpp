@@ -83,9 +83,23 @@ public:
     ///
     void add_profile(int32_t evse_id, ChargingProfile& profile);
 
+    ///
+    /// \brief Calculate the composite charging schedule for an EVSE in a provided time window.
+    ///
+    ChargingSchedule calculate_composite_schedule(
+        const ocpp::DateTime& start_time,
+        const ocpp::DateTime& end_time,
+        const int evse_id,
+        std::optional<ChargingRateUnitEnum> charging_rate_unit = ChargingRateUnitEnum::W
+    );
+
 private:
     std::vector<ChargingProfile> get_evse_specific_tx_default_profiles() const;
     std::vector<ChargingProfile> get_station_wide_tx_default_profiles() const;
+
+    std::vector<ChargingProfile> get_valid_profiles(const ocpp::DateTime& start_time,
+                                                    const ocpp::DateTime& end_time,
+                                                    const int evse_id);
 };
 
 } // namespace ocpp::v201
