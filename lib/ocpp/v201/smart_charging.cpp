@@ -206,12 +206,10 @@ ChargingSchedule SmartChargingHandler::calculate_composite_schedule(
     const int evse_id,
     std::optional<ChargingRateUnitEnum> charging_rate_unit
 ) {
-    return ChargingSchedule{
-        .id = 1,
-        .chargingSchedulePeriod = {
-            ChargingSchedulePeriod { .startPeriod = 0, .limit = 867.5309 }
-        }
-    };
+    if (!this->charging_profiles.at(evse_id).empty()) {
+        return this->charging_profiles.at(evse_id)[0]
+                                      .chargingSchedule[0];
+    }
 }
 
 std::vector<ChargingProfile> SmartChargingHandler::get_evse_specific_tx_default_profiles() const {

@@ -547,9 +547,12 @@ TEST_F(ChargepointTestFixtureV201, K01FR49_IfNumberPhasesMissingForACEVSE_ThenSe
 
 TEST_F(ChargepointTestFixtureV201, K08_IfSingleValidProfileForWholePeriod_ThenCompositeScheduleUsesItsLimit) {
     create_evse_with_id(1);
-    float single_profile_limit { 867.5309 };
+    create_evse_with_id(2);
 
-    ChargingProfile given_profile {
+    float single_profile_limit_evse1 { 867.5309 };
+    float single_profile_limit_evse2 { 90210 };
+
+    ChargingProfile given_profile_evse1 {
         .id = 1,
         .stackLevel = 0,
         .chargingProfilePurpose = ChargingProfilePurposeEnum::TxDefaultProfile,
@@ -559,7 +562,7 @@ TEST_F(ChargepointTestFixtureV201, K08_IfSingleValidProfileForWholePeriod_ThenCo
                 .id = 1,
                 .chargingRateUnit = ChargingRateUnitEnum::W,
                 .chargingSchedulePeriod = {
-                    ChargingSchedulePeriod { .startPeriod = 0, .limit = single_profile_limit }
+                    ChargingSchedulePeriod { .startPeriod = 0, .limit = single_profile_limit_evse1 }
                 },
                 .startSchedule = ocpp::DateTime("2020-01-01T00:00:00"),
                 .duration = 1e100
@@ -569,16 +572,45 @@ TEST_F(ChargepointTestFixtureV201, K08_IfSingleValidProfileForWholePeriod_ThenCo
         .validTo = ocpp::DateTime("3000-01-01T00:00:00")
     };
 
-    handler.add_profile(1, given_profile);
+    ChargingProfile given_profile_evse2 {
+        .id = 1,
+        .stackLevel = 0,
+        .chargingProfilePurpose = ChargingProfilePurposeEnum::TxDefaultProfile,
+        .chargingProfileKind = ChargingProfileKindEnum::Absolute,
+        .chargingSchedule = {
+            ChargingSchedule {
+                .id = 1,
+                .chargingRateUnit = ChargingRateUnitEnum::W,
+                .chargingSchedulePeriod = {
+                    ChargingSchedulePeriod { .startPeriod = 0, .limit = single_profile_limit_evse2 }
+                },
+                .startSchedule = ocpp::DateTime("2020-01-01T00:00:00"),
+                .duration = 1e100
+            }
+        },
+        .validFrom = ocpp::DateTime("1970-01-01T00:00:00"),
+        .validTo = ocpp::DateTime("3000-01-01T00:00:00")
+    };
 
-    ChargingSchedule sut = handler.calculate_composite_schedule(
+    handler.add_profile(1, given_profile_evse1);
+    handler.add_profile(2, given_profile_evse2);
+
+    ChargingSchedule composite_schedule_evse1 = handler.calculate_composite_schedule(
         ocpp::DateTime("2020-01-01T01:00:00"),
         ocpp::DateTime("2021-01-01T00:00:00"),
         1,
         ChargingRateUnitEnum::W
     );
 
-    EXPECT_THAT(sut.chargingSchedulePeriod[0].limit, testing::Eq(single_profile_limit));
+    ChargingSchedule composite_schedule_evse2 = handler.calculate_composite_schedule(
+        ocpp::DateTime("2020-01-01T01:00:00"),
+        ocpp::DateTime("2021-01-01T00:00:00"),
+        2,
+        ChargingRateUnitEnum::W
+    );
+
+    EXPECT_THAT(composite_schedule_evse1.chargingSchedulePeriod[0].limit, testing::Eq(single_profile_limit_evse1));
+    EXPECT_THAT(composite_schedule_evse2.chargingSchedulePeriod[0].limit, testing::Eq(single_profile_limit_evse2));
 }
 
 } // namespace ocpp::v201
