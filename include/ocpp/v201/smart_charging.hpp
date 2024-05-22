@@ -15,6 +15,7 @@
 namespace ocpp::v201 {
 
 const int DEFAULT_AND_MAX_NUMBER_PHASES = 3;
+constexpr float MAX_POWER_LIMIT = std::numeric_limits<float>::max();
 
 enum class ProfileValidationResultEnum {
     Valid,

@@ -613,4 +613,31 @@ TEST_F(ChargepointTestFixtureV201, K08_IfSingleValidProfileForWholePeriod_ThenCo
     EXPECT_THAT(composite_schedule_evse2.chargingSchedulePeriod[0].limit, testing::Eq(single_profile_limit_evse2));
 }
 
+TEST_F(ChargepointTestFixtureV201, K08_IfNoProfiles_ThenCompositeScheduleProvidesMaxPower) {
+    using namespace std::chrono_literals;
+
+    auto start_time = ocpp::DateTime("2020-01-01T01:00:00");
+    auto duration = std::chrono::seconds(365 * 24 * 3600);
+    auto end_time = ocpp::DateTime(start_time.to_time_point() + duration);
+
+    create_evse_with_id(1);
+
+    ChargingSchedule sut = handler.calculate_composite_schedule(
+        start_time,
+        end_time,
+        1,
+        ChargingRateUnitEnum::W
+    );
+
+    EXPECT_THAT(sut.chargingSchedulePeriod.size(), testing::Eq(1));
+
+    EXPECT_THAT(sut.startSchedule, testing::Eq(start_time));
+    EXPECT_THAT(sut.duration, testing::Eq(duration.count()));
+
+    EXPECT_THAT(
+        sut.chargingSchedulePeriod[0].limit,
+        testing::Eq(ocpp::v201::MAX_POWER_LIMIT)
+    );
+}
+
 } // namespace ocpp::v201
