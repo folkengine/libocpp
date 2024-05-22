@@ -113,7 +113,10 @@ protected:
                             ChargingSchedule charging_schedule, std::string transaction_id,
                             ChargingProfileKindEnum charging_profile_kind = ChargingProfileKindEnum::Absolute,
                             int stack_level = DEFAULT_STACK_LEVEL) {
-        auto recurrency_kind = RecurrencyKindEnum::Daily;
+        RecurrencyKindEnum recurrency_kind {};
+        if (charging_profile_kind != ChargingProfileKindEnum::Absolute) {
+            recurrency_kind = RecurrencyKindEnum::Daily;
+        }
         std::vector<ChargingSchedule> charging_schedules = {charging_schedule};
         return ChargingProfile{.id = charging_profile_id,
                                .stackLevel = stack_level,
