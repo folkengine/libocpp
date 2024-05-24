@@ -144,6 +144,12 @@ private:
                                                              const ocpp::DateTime& end_time, const int32_t evse_id,
                                                              ChargingRateUnitEnum charging_rate_unit);
     std::map<ChargingProfilePurposeEnum, LimitStackLevelPair> get_initial_purpose_and_stack_limits();
+
+    std::optional<ocpp::DateTime> get_absolute_profile_start_time(const std::optional<ocpp::DateTime> startSchedule);
+    std::optional<ocpp::DateTime>
+    get_recurring_profile_start_time(const ocpp::DateTime& time, const std::optional<ocpp::DateTime> startSchedule,
+                                     const std::optional<RecurrencyKindEnum> recurrencyKind);
+    std::optional<ocpp::DateTime> get_relative_profile_start_time(const int32_t evse_id);
 };
 
 } // namespace ocpp::v201

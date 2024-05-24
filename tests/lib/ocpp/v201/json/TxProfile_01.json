@@ -1,4 +1,5 @@
 {
+    "id": 1,
     "chargingProfileKind": "Absolute",
     "chargingProfilePurpose": "TxProfile",
     "chargingSchedule": [
@@ -15,7 +16,6 @@
             "startSchedule": "2024-01-17T18:00:00.000Z"
         }
     ],
-    "id": 1,
     "recurrencyKind": "Daily",
     "stackLevel": 1,
     "transactionId": "f1522902-1170-416f-8e43-9e3bce28fab7",
